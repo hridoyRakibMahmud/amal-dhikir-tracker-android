@@ -1,13 +1,20 @@
 package com.example.amaldhikirtracker.ui.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.amaldhikirtracker.ui.theme.AppTheme
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -46,19 +53,29 @@ fun MainScreen(
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    windowInsets = WindowInsets(0, 0, 0, 0) // Explicitly handle insets if needed, or let Scaffold do it
+                    containerColor = AppTheme.colors.surface,
+                    contentColor = AppTheme.colors.text,
+                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    modifier = Modifier.border(BorderStroke(1.dp, AppTheme.colors.border))
                 ) {
                     Screen.bottomNavItems.forEach { screen ->
+                        val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                         NavigationBarItem(
-                            icon = { 
+                            icon = {
                                 Icon(
-                                    imageVector = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) 
-                                        screen.selectedIcon!! else screen.icon!!, 
-                                    contentDescription = screen.label 
-                                ) 
+                                    imageVector = if (selected) screen.selectedIcon!! else screen.icon!!,
+                                    contentDescription = screen.label
+                                )
                             },
-                            label = { Text(screen.label!!) },
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            label = { Text(screen.label!!, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal) },
+                            selected = selected,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = AppTheme.colors.onGreen,
+                                selectedTextColor = AppTheme.colors.green,
+                                indicatorColor = AppTheme.colors.green,
+                                unselectedIconColor = AppTheme.colors.textMuted,
+                                unselectedTextColor = AppTheme.colors.textMuted
+                            ),
                             onClick = {
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -85,6 +102,9 @@ fun MainScreen(
                         viewModel = trackerViewModel,
                         onNavigateToCounter = { dhikirId ->
                             navController.navigate(Screen.Counter.createRoute(dhikirId))
+                        },
+                        onNavigateToManageDhikirs = {
+                            navController.navigate(Screen.ManageDhikirs.route)
                         }
                     )
                 }

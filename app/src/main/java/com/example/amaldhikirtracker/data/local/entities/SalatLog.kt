@@ -14,5 +14,9 @@ data class SalatLog(
     val salatName: String,
     val type: String, // FARD, VOLUNTARY
     val isCompleted: Boolean,
-    val date: LocalDate
+    val date: LocalDate,
+    val sunnahDone: Boolean = false,
+    // Material Symbols glyph name for voluntary (Nafl) rows, e.g. "nightlight". Null for Fard rows.
+    val icon: String? = null,
+    val arabicName: String? = null
 )

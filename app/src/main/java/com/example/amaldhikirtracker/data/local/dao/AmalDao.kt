@@ -39,6 +39,12 @@ interface AmalDao {
     @Query("SELECT * FROM dhikirs WHERE id = :id")
     suspend fun getDhikirById(id: Long): Dhikir?
 
+    @Query("SELECT COALESCE(SUM(count), 0) FROM dhikir_logs WHERE dhikirId = :dhikirId")
+    fun getTotalCountForDhikir(dhikirId: Long): Flow<Int>
+
+    @Query("UPDATE dhikirs SET dailyTarget = :dailyTarget WHERE id = :dhikirId")
+    suspend fun setDhikirTarget(dhikirId: Long, dailyTarget: Int?)
+
     // Dhikir Logs
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDhikirLog(dhikirLog: DhikirLog)

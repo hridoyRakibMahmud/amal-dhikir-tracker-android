@@ -5,6 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.amaldhikirtracker.data.local.ThemeMode
 import com.example.amaldhikirtracker.ui.screens.MainScreen
 import com.example.amaldhikirtracker.ui.theme.AmalDhikirTrackerTheme
 
@@ -29,11 +34,17 @@ class MainActivity : ComponentActivity() {
 
         val application = applicationContext as AmalApplication
         setContent {
-            AmalDhikirTrackerTheme {
+            val themeMode by application.preferencesManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+            AmalDhikirTrackerTheme(darkTheme = resolveDarkTheme(themeMode)) {
                 MainScreen(application = application)
             }
         }
     }
 }
 
-// Deleted AmalApp() as it is replaced by MainScreen
+@Composable
+private fun resolveDarkTheme(mode: ThemeMode): Boolean = when (mode) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}

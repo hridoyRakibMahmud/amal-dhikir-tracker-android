@@ -9,5 +9,6 @@ data class Dhikir(
     val name: String,
     val arabicName: String? = null,
     val category: String? = null,
-    val isCustom: Boolean = false
+    val isCustom: Boolean = false,
+    val dailyTarget: Int? = null
 )

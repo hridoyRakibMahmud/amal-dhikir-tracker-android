@@ -17,10 +17,15 @@ enum class CalendarType {
     GREGORIAN, HIJRI
 }
 
+enum class ThemeMode {
+    SYSTEM, LIGHT, DARK
+}
+
 class PreferencesManager(private val context: Context) {
     private val calendarTypeKey = stringPreferencesKey("calendar_type")
     private val lastLatKey = doublePreferencesKey("last_lat")
     private val lastLngKey = doublePreferencesKey("last_lng")
+    private val themeModeKey = stringPreferencesKey("theme_mode")
 
     val calendarType: Flow<CalendarType> = context.dataStore.data
         .map { preferences ->
@@ -31,6 +36,18 @@ class PreferencesManager(private val context: Context) {
     suspend fun setCalendarType(type: CalendarType) {
         context.dataStore.edit { preferences ->
             preferences[calendarTypeKey] = type.name
+        }
+    }
+
+    val themeMode: Flow<ThemeMode> = context.dataStore.data
+        .map { preferences ->
+            val mode = preferences[themeModeKey] ?: ThemeMode.SYSTEM.name
+            ThemeMode.valueOf(mode)
+        }
+
+    suspend fun setThemeMode(mode: ThemeMode) {
+        context.dataStore.edit { preferences ->
+            preferences[themeModeKey] = mode.name
         }
     }
 

@@ -36,6 +36,12 @@ class AmalRepository(private val amalDao: AmalDao) {
     suspend fun deleteDhikir(dhikir: Dhikir) =
         amalDao.deleteDhikir(dhikir)
 
+    fun getTotalCountForDhikir(dhikirId: Long): Flow<Int> =
+        amalDao.getTotalCountForDhikir(dhikirId)
+
+    suspend fun setDhikirTarget(dhikirId: Long, dailyTarget: Int?) =
+        amalDao.setDhikirTarget(dhikirId, dailyTarget)
+
     fun getDhikirLogsByDate(date: LocalDate): Flow<List<DhikirLog>> =
         amalDao.getDhikirLogsByDate(date)
 
