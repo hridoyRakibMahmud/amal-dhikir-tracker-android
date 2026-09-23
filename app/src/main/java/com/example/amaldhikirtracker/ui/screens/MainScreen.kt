@@ -114,7 +114,12 @@ fun MainScreen(
                 ) { backStackEntry ->
                     val dhikirId = backStackEntry.arguments?.getLong("dhikirId") ?: 0L
                     val counterViewModel: CounterViewModel = viewModel(
-                        factory = CounterViewModel.Factory(application.repository, dhikirId)
+                        factory = CounterViewModel.Factory(
+                            application.repository,
+                            application.preferencesManager,
+                            application.locationTracker,
+                            dhikirId
+                        )
                     )
                     CounterScreen(
                         viewModel = counterViewModel,
@@ -137,16 +142,17 @@ fun MainScreen(
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
+                        preferencesManager = application.preferencesManager,
                         onNavigateToManageDhikirs = {
                             navController.navigate(Screen.ManageDhikirs.route)
                         },
-                        onNavigateToCalendarSettings = {
-                            navController.navigate(Screen.CalendarSettings.route)
+                        onNavigateToLogin = {
+                            navController.navigate(Screen.Login.route)
                         }
                     )
                 }
-                composable(Screen.CalendarSettings.route) {
-                    CalendarSettingsScreen(
+                composable(Screen.Login.route) {
+                    LoginScreen(
                         preferencesManager = application.preferencesManager,
                         onNavigateBack = { navController.popBackStack() }
                     )

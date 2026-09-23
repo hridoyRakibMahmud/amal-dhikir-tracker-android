@@ -21,11 +21,16 @@ enum class ThemeMode {
     SYSTEM, LIGHT, DARK
 }
 
+data class AuthProfile(val displayName: String, val email: String?, val photoUrl: String?)
+
 class PreferencesManager(private val context: Context) {
     private val calendarTypeKey = stringPreferencesKey("calendar_type")
     private val lastLatKey = doublePreferencesKey("last_lat")
     private val lastLngKey = doublePreferencesKey("last_lng")
     private val themeModeKey = stringPreferencesKey("theme_mode")
+    private val authNameKey = stringPreferencesKey("auth_display_name")
+    private val authEmailKey = stringPreferencesKey("auth_email")
+    private val authPhotoKey = stringPreferencesKey("auth_photo_url")
 
     val calendarType: Flow<CalendarType> = context.dataStore.data
         .map { preferences ->
@@ -63,5 +68,29 @@ class PreferencesManager(private val context: Context) {
         val lat = prefs[lastLatKey] ?: return null
         val lng = prefs[lastLngKey] ?: return null
         return Pair(lat, lng)
+    }
+
+    // Local session only — there is no backend yet, so nothing is synced. Set on successful
+    // Google sign-in, cleared on sign-out.
+    val authProfile: Flow<AuthProfile?> = context.dataStore.data
+        .map { preferences ->
+            val name = preferences[authNameKey] ?: return@map null
+            AuthProfile(displayName = name, email = preferences[authEmailKey], photoUrl = preferences[authPhotoKey])
+        }
+
+    suspend fun setAuthProfile(profile: AuthProfile) {
+        context.dataStore.edit { preferences ->
+            preferences[authNameKey] = profile.displayName
+            profile.email?.let { preferences[authEmailKey] = it } ?: preferences.remove(authEmailKey)
+            profile.photoUrl?.let { preferences[authPhotoKey] = it } ?: preferences.remove(authPhotoKey)
+        }
+    }
+
+    suspend fun clearAuthProfile() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(authNameKey)
+            preferences.remove(authEmailKey)
+            preferences.remove(authPhotoKey)
+        }
     }
 }

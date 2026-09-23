@@ -42,7 +42,7 @@ sealed class Screen(
         selectedIcon = Icons.Rounded.Settings
     )
 
-    object CalendarSettings : Screen("calendar_settings")
+    object Login : Screen("login")
 
     companion object {
         val bottomNavItems = listOf(Tracker, History, Settings)

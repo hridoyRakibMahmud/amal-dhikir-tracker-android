@@ -9,13 +9,9 @@ import com.example.amaldhikirtracker.data.local.entities.SalatLog
 import com.example.amaldhikirtracker.data.repository.AmalRepository
 import com.example.amaldhikirtracker.data.local.PreferencesManager
 import com.example.amaldhikirtracker.util.LocationTracker
-import com.example.amaldhikirtracker.util.SunsetCalculator
+import com.example.amaldhikirtracker.util.resolveSpiritualDate
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZonedDateTime
 
 class HistoryViewModel(
     private val repository: AmalRepository,
@@ -23,28 +19,13 @@ class HistoryViewModel(
     private val locationTracker: LocationTracker
 ) : ViewModel() {
 
-    private val _dateRange = MutableStateFlow(7) 
+    private val _dateRange = MutableStateFlow(7)
     val dateRange: StateFlow<Int> = _dateRange.asStateFlow()
 
     val historyState: StateFlow<HistoryState> = _dateRange.flatMapLatest { days ->
-        // Simplified spiritual date calculation for history range
-        val now = LocalDateTime.now()
-        // We use runBlocking here because this is inside flatMapLatest and we need the date to start the query
-        // This is not ideal but given the structure, it's the simplest way to get the 'end date'
-        val lastLoc = runBlocking { preferencesManager.getLastLocation() }
-        var sunset = LocalTime.of(18, 0)
-        if (lastLoc != null) {
-            sunset = SunsetCalculator.getSunsetTime(lastLoc.first, lastLoc.second, ZonedDateTime.now())
-        }
-        
-        val endDate = if (now.toLocalTime().isAfter(sunset)) {
-            now.toLocalDate().plusDays(1)
-        } else {
-            now.toLocalDate()
-        }
-
+        val endDate = resolveSpiritualDate(preferencesManager, locationTracker)
         val startDate = endDate.minusDays(days.toLong() - 1)
-        
+
         combine(
             repository.getSalatLogsInRange(startDate, endDate),
             repository.getDhikirLogsInRange(startDate, endDate),
