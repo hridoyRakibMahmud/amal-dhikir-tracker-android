@@ -9,6 +9,7 @@ import com.example.amaldhikirtracker.data.local.entities.Dhikir
 import com.example.amaldhikirtracker.data.local.entities.DhikirLog
 import com.example.amaldhikirtracker.data.local.entities.SalatLog
 import com.example.amaldhikirtracker.data.repository.AmalRepository
+import com.example.amaldhikirtracker.util.HijriCalendar
 import com.example.amaldhikirtracker.util.LocationTracker
 import com.example.amaldhikirtracker.util.SunsetCalculator
 import kotlinx.coroutines.flow.*
@@ -17,8 +18,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.time.chrono.HijrahDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 class TrackerViewModel(
@@ -35,11 +36,14 @@ class TrackerViewModel(
     val calendarType: StateFlow<CalendarType> = preferencesManager.calendarType
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CalendarType.HIJRI)
 
-    val formattedDate: StateFlow<String> = combine(spiritualDate, calendarType) { date, type ->
+    val hijriOffset: StateFlow<Int> = preferencesManager.hijriDateOffset
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val formattedDate: StateFlow<String> = combine(spiritualDate, calendarType, hijriOffset) { date, type, offset ->
         if (type == CalendarType.HIJRI) {
-            val hijriDate = HijrahDate.from(date)
-            val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.getDefault())
-            hijriDate.format(formatter)
+            val hijri = HijriCalendar.from(date, offset)
+            val weekday = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            "$weekday, ${hijri.day} ${HijriCalendar.monthName(hijri.month)} ${hijri.year}"
         } else {
             date.format(DateTimeFormatter.ofPattern("EEEE, d MMMM"))
         }
@@ -47,8 +51,9 @@ class TrackerViewModel(
 
     // (primary, secondary) date strings for the Home header — primary follows the user's
     // preferred calendar type, secondary shows the other one for reference.
-    val dateHeader: StateFlow<Pair<String, String>> = combine(spiritualDate, calendarType) { date, type ->
-        val hijri = HijrahDate.from(date).format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())) + " AH"
+    val dateHeader: StateFlow<Pair<String, String>> = combine(spiritualDate, calendarType, hijriOffset) { date, type, offset ->
+        val hijriDate = HijriCalendar.from(date, offset)
+        val hijri = "${HijriCalendar.monthName(hijriDate.month)} ${hijriDate.day}, ${hijriDate.year} AH"
         val gregorian = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault()))
         if (type == CalendarType.HIJRI) hijri to "$gregorian · Gregorian" else gregorian to "$hijri · Hijri"
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "" to "")

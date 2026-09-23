@@ -3,6 +3,8 @@ package com.example.amaldhikirtracker.data.repository
 import com.example.amaldhikirtracker.data.local.dao.AmalDao
 import com.example.amaldhikirtracker.data.local.entities.Dhikir
 import com.example.amaldhikirtracker.data.local.entities.DhikirLog
+import com.example.amaldhikirtracker.data.local.entities.FastingLog
+import com.example.amaldhikirtracker.data.local.entities.FastingType
 import com.example.amaldhikirtracker.data.local.entities.SalatLog
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -53,4 +55,25 @@ class AmalRepository(private val amalDao: AmalDao) {
 
     fun getDhikirLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<DhikirLog>> =
         amalDao.getDhikirLogsInRange(startDate, endDate)
+
+    fun getAllFastingTypes(): Flow<List<FastingType>> =
+        amalDao.getAllFastingTypes()
+
+    suspend fun insertFastingType(fastingType: FastingType) =
+        amalDao.insertFastingType(fastingType)
+
+    suspend fun deleteFastingType(fastingType: FastingType) =
+        amalDao.deleteFastingType(fastingType)
+
+    suspend fun getFastingLog(date: LocalDate): FastingLog? =
+        amalDao.getFastingLog(date)
+
+    suspend fun insertFastingLog(fastingLog: FastingLog) =
+        amalDao.insertFastingLog(fastingLog)
+
+    suspend fun deleteFastingLog(fastingLog: FastingLog) =
+        amalDao.deleteFastingLog(fastingLog)
+
+    fun getFastingLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<FastingLog>> =
+        amalDao.getFastingLogsInRange(startDate, endDate)
 }

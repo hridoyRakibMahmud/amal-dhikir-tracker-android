@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.amaldhikirtracker.ui.viewmodel.CounterViewModel
+import com.example.amaldhikirtracker.ui.viewmodel.FastingViewModel
 import com.example.amaldhikirtracker.ui.viewmodel.HistoryViewModel
 import com.example.amaldhikirtracker.ui.viewmodel.TrackerViewModel
 
@@ -146,9 +147,25 @@ fun MainScreen(
                         onNavigateToManageDhikirs = {
                             navController.navigate(Screen.ManageDhikirs.route)
                         },
+                        onNavigateToFasting = {
+                            navController.navigate(Screen.Fasting.route)
+                        },
                         onNavigateToLogin = {
                             navController.navigate(Screen.Login.route)
                         }
+                    )
+                }
+                composable(Screen.Fasting.route) {
+                    val fastingViewModel: FastingViewModel = viewModel(
+                        factory = FastingViewModel.Factory(
+                            application.repository,
+                            application.preferencesManager,
+                            application.locationTracker
+                        )
+                    )
+                    FastingScreen(
+                        viewModel = fastingViewModel,
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
                 composable(Screen.Login.route) {

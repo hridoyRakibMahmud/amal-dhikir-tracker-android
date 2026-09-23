@@ -3,6 +3,8 @@ package com.example.amaldhikirtracker.data.local.dao
 import androidx.room.*
 import com.example.amaldhikirtracker.data.local.entities.Dhikir
 import com.example.amaldhikirtracker.data.local.entities.DhikirLog
+import com.example.amaldhikirtracker.data.local.entities.FastingLog
+import com.example.amaldhikirtracker.data.local.entities.FastingType
 import com.example.amaldhikirtracker.data.local.entities.SalatLog
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -67,4 +69,27 @@ interface AmalDao {
             insertDhikirLog(existing.copy(count = existing.count + dhikirLog.count))
         }
     }
+
+    // Fasting Types
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFastingType(fastingType: FastingType): Long
+
+    @Delete
+    suspend fun deleteFastingType(fastingType: FastingType)
+
+    @Query("SELECT * FROM fasting_types")
+    fun getAllFastingTypes(): Flow<List<FastingType>>
+
+    // Fasting Logs — at most one per date
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFastingLog(fastingLog: FastingLog)
+
+    @Delete
+    suspend fun deleteFastingLog(fastingLog: FastingLog)
+
+    @Query("SELECT * FROM fasting_logs WHERE date = :date LIMIT 1")
+    suspend fun getFastingLog(date: LocalDate): FastingLog?
+
+    @Query("SELECT * FROM fasting_logs WHERE date BETWEEN :startDate AND :endDate")
+    fun getFastingLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<FastingLog>>
 }

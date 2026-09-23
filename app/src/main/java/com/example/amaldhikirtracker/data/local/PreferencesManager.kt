@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +32,7 @@ class PreferencesManager(private val context: Context) {
     private val authNameKey = stringPreferencesKey("auth_display_name")
     private val authEmailKey = stringPreferencesKey("auth_email")
     private val authPhotoKey = stringPreferencesKey("auth_photo_url")
+    private val hijriDateOffsetKey = intPreferencesKey("hijri_date_offset")
 
     val calendarType: Flow<CalendarType> = context.dataStore.data
         .map { preferences ->
@@ -91,6 +93,17 @@ class PreferencesManager(private val context: Context) {
             preferences.remove(authNameKey)
             preferences.remove(authEmailKey)
             preferences.remove(authPhotoKey)
+        }
+    }
+
+    // Manual correction (in days, typically -2..+2) applied on top of the Umm al-Qura
+    // calculation to match a specific region's local moon-sighting announcement.
+    val hijriDateOffset: Flow<Int> = context.dataStore.data
+        .map { preferences -> preferences[hijriDateOffsetKey] ?: 0 }
+
+    suspend fun setHijriDateOffset(offsetDays: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[hijriDateOffsetKey] = offsetDays
         }
     }
 }

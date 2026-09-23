@@ -44,6 +44,8 @@ sealed class Screen(
 
     object Login : Screen("login")
 
+    object Fasting : Screen("fasting")
+
     companion object {
         val bottomNavItems = listOf(Tracker, History, Settings)
     }

@@ -10,9 +10,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.List
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.amaldhikirtracker.data.local.CalendarType
 import com.example.amaldhikirtracker.data.local.PreferencesManager
@@ -32,10 +36,12 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     preferencesManager: PreferencesManager,
     onNavigateToManageDhikirs: () -> Unit,
+    onNavigateToFasting: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val calendarType by preferencesManager.calendarType.collectAsState(initial = CalendarType.HIJRI)
     val themeMode by preferencesManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+    val hijriOffset by preferencesManager.hijriDateOffset.collectAsState(initial = 0)
     val authProfile by preferencesManager.authProfile.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
 
@@ -135,6 +141,30 @@ fun SettingsScreen(
                             }
                         )
                     }
+                    HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Hijri date adjustment",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = AppTheme.colors.text
+                            )
+                            Text(
+                                "Matches your local moon-sighting announcement",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AppTheme.colors.textMuted
+                            )
+                        }
+                        OffsetStepper(
+                            value = hijriOffset,
+                            onChange = { newValue ->
+                                scope.launch { preferencesManager.setHijriDateOffset(newValue.coerceIn(-3, 3)) }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -147,6 +177,13 @@ fun SettingsScreen(
                     subtitle = "Add, edit or remove custom dhikirs",
                     icon = Icons.AutoMirrored.Rounded.List,
                     onClick = onNavigateToManageDhikirs
+                )
+                HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
+                SettingsMenuItem(
+                    title = "Nafl Fasting",
+                    subtitle = "Track voluntary fasting days",
+                    icon = Icons.Rounded.CalendarMonth,
+                    onClick = onNavigateToFasting
                 )
             }
         }
@@ -230,6 +267,26 @@ private fun AppearanceToggle(isDark: Boolean, onToggle: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.text
             )
+        }
+    }
+}
+
+@Composable
+private fun OffsetStepper(value: Int, onChange: (Int) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = { onChange(value - 1) }, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Rounded.Remove, contentDescription = "Decrease", tint = AppTheme.colors.text, modifier = Modifier.size(16.dp))
+        }
+        Text(
+            text = if (value > 0) "+$value" else value.toString(),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = AppTheme.colors.text,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(min = 24.dp)
+        )
+        IconButton(onClick = { onChange(value + 1) }, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Rounded.Add, contentDescription = "Increase", tint = AppTheme.colors.text, modifier = Modifier.size(16.dp))
         }
     }
 }
