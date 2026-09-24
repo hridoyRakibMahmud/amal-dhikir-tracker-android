@@ -19,6 +19,8 @@ import java.util.Locale
 
 data class StandardFastInfo(val type: FastingType, val nextOccurrence: FastingRules.NextOccurrence?)
 
+data class RamadanSummary(val hijriYear: Int, val fasted: Int, val missed: Int, val remaining: Int, val totalDays: Int)
+
 class FastingViewModel(
     private val repository: AmalRepository,
     private val preferencesManager: PreferencesManager,
@@ -72,6 +74,24 @@ class FastingViewModel(
     val standardFasts: StateFlow<List<StandardFastInfo>> = combine(allTypes, spiritualDate, hijriOffset) { types, date, offset ->
         types.filter { !it.isCustom }.map { StandardFastInfo(it, FastingRules.nextOccurrence(it.name, date, offset)) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Missed/fasted/remaining count for Ramadan (mandatory fasting), only while that month is the one visible in the calendar. */
+    val ramadanSummary: StateFlow<RamadanSummary?> = combine(
+        _visibleHijriYear, _visibleHijriMonth, monthDates, monthLogs, spiritualDate
+    ) { year, month, dates, logs, today ->
+        if (month != 9 || dates.isEmpty()) return@combine null
+        var fasted = 0
+        var missed = 0
+        var remaining = 0
+        dates.forEach { date ->
+            when {
+                logs.containsKey(date) -> fasted++
+                date.isBefore(today) -> missed++
+                else -> remaining++
+            }
+        }
+        RamadanSummary(year, fasted, missed, remaining, dates.size)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
         viewModelScope.launch {

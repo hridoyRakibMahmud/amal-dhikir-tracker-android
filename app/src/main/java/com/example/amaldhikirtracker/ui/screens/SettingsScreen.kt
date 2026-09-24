@@ -180,8 +180,8 @@ fun SettingsScreen(
                 )
                 HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
                 SettingsMenuItem(
-                    title = "Nafl Fasting",
-                    subtitle = "Track voluntary fasting days",
+                    title = "Fasting Track",
+                    subtitle = "Track your fasting days",
                     icon = Icons.Rounded.CalendarMonth,
                     onClick = onNavigateToFasting
                 )

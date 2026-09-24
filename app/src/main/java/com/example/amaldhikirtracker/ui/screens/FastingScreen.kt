@@ -30,6 +30,7 @@ import com.example.amaldhikirtracker.data.local.entities.FastingType
 import com.example.amaldhikirtracker.ui.theme.AppTheme
 import com.example.amaldhikirtracker.ui.theme.NotoNaskhArabic
 import com.example.amaldhikirtracker.ui.viewmodel.FastingViewModel
+import com.example.amaldhikirtracker.ui.viewmodel.RamadanSummary
 import com.example.amaldhikirtracker.ui.viewmodel.StandardFastInfo
 import com.example.amaldhikirtracker.util.FastingRules
 import com.example.amaldhikirtracker.util.HijriCalendar
@@ -48,6 +49,7 @@ fun FastingScreen(
     val monthLogs by viewModel.monthLogs.collectAsState()
     val allTypes by viewModel.allTypes.collectAsState()
     val standardFasts by viewModel.standardFasts.collectAsState()
+    val ramadanSummary by viewModel.ramadanSummary.collectAsState()
 
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showAddType by remember { mutableStateOf(false) }
@@ -97,6 +99,12 @@ fun FastingScreen(
                 IconButton(onClick = { viewModel.nextMonth() }) {
                     Icon(Icons.Rounded.ChevronRight, contentDescription = "Next month", tint = AppTheme.colors.text)
                 }
+            }
+        }
+
+        ramadanSummary?.let { summary ->
+            item {
+                RamadanSummaryCard(summary = summary, modifier = Modifier.padding(bottom = 18.dp))
             }
         }
 
@@ -251,6 +259,44 @@ private fun DayCell(date: LocalDate, fasted: Boolean, forbidden: Boolean, future
                 color = textColor.copy(alpha = 0.65f)
             )
         }
+    }
+}
+
+@Composable
+private fun RamadanSummaryCard(summary: RamadanSummary, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = AppTheme.colors.greenTint,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, AppTheme.colors.green)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text(
+                text = "Ramadan ${summary.hijriYear} AH — mandatory fasts",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = AppTheme.colors.greenStrong
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                RamadanStat(label = "Fasted", value = summary.fasted, color = AppTheme.colors.greenStrong, modifier = Modifier.weight(1f))
+                RamadanStat(
+                    label = "Missed",
+                    value = summary.missed,
+                    color = if (summary.missed > 0) AppTheme.colors.danger else AppTheme.colors.textMuted,
+                    modifier = Modifier.weight(1f)
+                )
+                RamadanStat(label = "Remaining", value = summary.remaining, color = AppTheme.colors.textMuted, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun RamadanStat(label: String, value: Int, color: Color, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = value.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = color)
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTheme.colors.textMuted)
     }
 }
 
