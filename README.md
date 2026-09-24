@@ -23,7 +23,7 @@ An offline-first Android app for tracking daily Salah (prayers), Dhikir (remembr
 ## Project structure
 
 ```
-app/src/main/java/com/example/amaldhikirtracker/
+app/src/main/java/com/bindraft/amaldhikirtracker/
 ├── data/
 │   ├── local/          # Room database, DAOs, entities, DataStore preferences
 │   └── repository/      # Thin repository layer over the DAO

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.amaldhikirtracker"
+    namespace = "com.bindraft.amaldhikirtracker"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.amaldhikirtracker"
+        applicationId = "com.bindraft.amaldhikirtracker"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
