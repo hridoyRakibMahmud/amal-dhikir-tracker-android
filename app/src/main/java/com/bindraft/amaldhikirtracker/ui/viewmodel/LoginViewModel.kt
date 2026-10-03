@@ -8,24 +8,24 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.AuthProfile
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
+import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-/**
- * OAuth 2.0 Web Client ID from Google Cloud Console (APIs & Services > Credentials),
- * required by Credential Manager's Google ID request. Registered against this app's
- * package name (com.bindraft.amaldhikirtracker) + debug SHA-1.
- */
-const val GOOGLE_WEB_CLIENT_ID = "244474017511-9fr91a0co9brcmpntrj911sk6s2ijnor.apps.googleusercontent.com"
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 sealed interface LoginUiState {
     data object Idle : LoginUiState
@@ -47,7 +47,7 @@ class LoginViewModel(private val preferencesManager: PreferencesManager) : ViewM
             try {
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(GOOGLE_WEB_CLIENT_ID)
+                    .setServerClientId(context.getString(R.string.default_web_client_id))
                     .build()
                 val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
@@ -58,6 +58,10 @@ class LoginViewModel(private val preferencesManager: PreferencesManager) : ViewM
 
                 if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+
+                    val firebaseCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
+                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential).awaitResult()
+
                     preferencesManager.setAuthProfile(
                         AuthProfile(
                             displayName = googleIdTokenCredential.displayName ?: googleIdTokenCredential.id,
@@ -73,12 +77,17 @@ class LoginViewModel(private val preferencesManager: PreferencesManager) : ViewM
                 _uiState.value = LoginUiState.Error(e.message ?: "Sign-in was cancelled or failed")
             } catch (e: GoogleIdTokenParsingException) {
                 _uiState.value = LoginUiState.Error("Couldn't parse the Google credential")
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error(e.message ?: "Couldn't sign in to the backend")
             }
         }
     }
 
     fun signOut() {
-        viewModelScope.launch { preferencesManager.clearAuthProfile() }
+        viewModelScope.launch {
+            FirebaseAuth.getInstance().signOut()
+            preferencesManager.clearAuthProfile()
+        }
     }
 
     class Factory(private val preferencesManager: PreferencesManager) : ViewModelProvider.Factory {
@@ -90,4 +99,10 @@ class LoginViewModel(private val preferencesManager: PreferencesManager) : ViewM
             throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
+}
+
+private suspend fun <T> Task<T>.awaitResult(): T = suspendCancellableCoroutine { continuation ->
+    addOnSuccessListener { continuation.resume(it) }
+    addOnFailureListener { continuation.resumeWithException(it) }
+    addOnCanceledListener { continuation.cancel() }
 }

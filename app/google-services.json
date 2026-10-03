@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "244474017511",
+    "project_id": "demoacc-5280c",
+    "storage_bucket": "demoacc-5280c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244474017511:android:1fef82cf0662ff57f79442",
+        "android_client_info": {
+          "package_name": "com.bindraft.amaldhikirtracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244474017511-bs2b14obvs7p879e90ge1mks000aiuq0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkW18IcPOjVzv5_bRPbrEr6sUOzhCZCaE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244474017511-bs2b14obvs7p879e90ge1mks000aiuq0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
