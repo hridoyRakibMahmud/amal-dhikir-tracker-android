@@ -20,6 +20,8 @@ import java.time.LocalDate
 )
 data class DhikirLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val syncId: String = java.util.UUID.randomUUID().toString(),
+    val updatedAt: Long = System.currentTimeMillis(),
     val dhikirId: Long,
     val count: Int,
     val date: LocalDate

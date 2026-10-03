@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "fasting_types")
 data class FastingType(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val syncId: String = java.util.UUID.randomUUID().toString(),
+    val updatedAt: Long = System.currentTimeMillis(),
     val name: String,
     val arabicName: String? = null,
     val isCustom: Boolean = false

@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each user can only read and write their own subtree.
+    match /users/{uid}/{collection}/{syncId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid
+        && collection in ['dhikirs', 'dhikirLogs', 'salatLogs', 'fastingTypes', 'fastingLogs'];
+
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && collection in ['dhikirs', 'dhikirLogs', 'salatLogs', 'fastingTypes', 'fastingLogs']
+        && request.resource.data.updatedAt is number
+        && request.resource.data.updatedAt >= 0;
+    }
+
+    // Everything else is denied by default.
+  }
+}

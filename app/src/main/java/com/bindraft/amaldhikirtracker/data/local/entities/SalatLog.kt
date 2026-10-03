@@ -11,6 +11,8 @@ import java.time.LocalDate
 )
 data class SalatLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val syncId: String = java.util.UUID.randomUUID().toString(),
+    val updatedAt: Long = System.currentTimeMillis(),
     val salatName: String,
     val type: String, // FARD, VOLUNTARY
     val isCompleted: Boolean,

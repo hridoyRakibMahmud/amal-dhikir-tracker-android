@@ -11,21 +11,18 @@ import androidx.lifecycle.viewModelScope
 import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.AuthProfile
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
-import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.bindraft.amaldhikirtracker.util.awaitResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 sealed interface LoginUiState {
     data object Idle : LoginUiState
@@ -99,10 +96,4 @@ class LoginViewModel(private val preferencesManager: PreferencesManager) : ViewM
             throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
-}
-
-private suspend fun <T> Task<T>.awaitResult(): T = suspendCancellableCoroutine { continuation ->
-    addOnSuccessListener { continuation.resume(it) }
-    addOnFailureListener { continuation.resumeWithException(it) }
-    addOnCanceledListener { continuation.cancel() }
 }

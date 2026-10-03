@@ -44,8 +44,8 @@ interface AmalDao {
     @Query("SELECT COALESCE(SUM(count), 0) FROM dhikir_logs WHERE dhikirId = :dhikirId")
     fun getTotalCountForDhikir(dhikirId: Long): Flow<Int>
 
-    @Query("UPDATE dhikirs SET dailyTarget = :dailyTarget WHERE id = :dhikirId")
-    suspend fun setDhikirTarget(dhikirId: Long, dailyTarget: Int?)
+    @Query("UPDATE dhikirs SET dailyTarget = :dailyTarget, updatedAt = :updatedAt WHERE id = :dhikirId")
+    suspend fun setDhikirTarget(dhikirId: Long, dailyTarget: Int?, updatedAt: Long)
 
     // Dhikir Logs
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -62,11 +62,12 @@ interface AmalDao {
 
     @Transaction
     suspend fun upsertDhikirLog(dhikirLog: DhikirLog) {
+        val now = System.currentTimeMillis()
         val existing = getDhikirLog(dhikirLog.dhikirId, dhikirLog.date)
         if (existing == null) {
-            insertDhikirLog(dhikirLog)
+            insertDhikirLog(dhikirLog.copy(updatedAt = now))
         } else {
-            insertDhikirLog(existing.copy(count = existing.count + dhikirLog.count))
+            insertDhikirLog(existing.copy(count = existing.count + dhikirLog.count, updatedAt = now))
         }
     }
 
@@ -92,4 +93,38 @@ interface AmalDao {
 
     @Query("SELECT * FROM fasting_logs WHERE date BETWEEN :startDate AND :endDate")
     fun getFastingLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<FastingLog>>
+
+    // Sync lookups — resolve remote syncId references back to local rows
+    @Query("SELECT * FROM dhikirs WHERE syncId = :syncId LIMIT 1")
+    suspend fun getDhikirBySyncId(syncId: String): Dhikir?
+
+    @Query("SELECT * FROM dhikir_logs WHERE syncId = :syncId LIMIT 1")
+    suspend fun getDhikirLogBySyncId(syncId: String): DhikirLog?
+
+    @Query("SELECT * FROM salat_logs WHERE syncId = :syncId LIMIT 1")
+    suspend fun getSalatLogBySyncId(syncId: String): SalatLog?
+
+    @Query("SELECT * FROM fasting_types WHERE syncId = :syncId LIMIT 1")
+    suspend fun getFastingTypeBySyncId(syncId: String): FastingType?
+
+    @Query("SELECT * FROM fasting_logs WHERE syncId = :syncId LIMIT 1")
+    suspend fun getFastingLogBySyncId(syncId: String): FastingLog?
+
+    @Query("SELECT * FROM dhikir_logs")
+    suspend fun getAllDhikirLogsOnce(): List<DhikirLog>
+
+    @Query("SELECT * FROM salat_logs")
+    suspend fun getAllSalatLogsOnce(): List<SalatLog>
+
+    @Query("SELECT * FROM fasting_logs")
+    suspend fun getAllFastingLogsOnce(): List<FastingLog>
+
+    @Delete
+    suspend fun deleteDhikirLog(dhikirLog: DhikirLog)
+
+    @Delete
+    suspend fun deleteSalatLog(salatLog: SalatLog)
+
+    @Query("SELECT * FROM fasting_types WHERE id = :id")
+    suspend fun getFastingTypeById(id: Long): FastingType?
 }
