@@ -1,13 +1,13 @@
 package com.bindraft.amaldhikirtracker.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.NightsStay
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
 import com.bindraft.amaldhikirtracker.ui.viewmodel.LoginUiState
@@ -126,9 +128,11 @@ fun LoginScreen(
                     if (uiState is LoginUiState.Loading) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = AppTheme.colors.text)
                     } else {
-                        // Placeholder mark — swap for Google's official multicolor "G" asset
-                        // (Google Identity branding guidelines) before shipping.
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Image(
+                            painter = painterResource(R.drawable.ic_google_g),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text("Sign in with Google")
                     }
