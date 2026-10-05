@@ -7,12 +7,15 @@ import com.bindraft.amaldhikirtracker.data.local.entities.FastingLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingType
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.util.awaitResult
+import android.util.Log
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,7 +31,14 @@ import java.time.LocalDate
  */
 class SyncManager(private val dao: AmalDao) {
 
-    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private companion object {
+        const val TAG = "SyncManager"
+        const val FIRESTORE_DATABASE_ID = "amal-dhikir-tracker-db"
+    }
+
+    private val firestore: FirebaseFirestore by lazy {
+        FirebaseFirestore.getInstance(FirebaseApp.getInstance(), FIRESTORE_DATABASE_ID)
+    }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Any()
     private val listeners = mutableListOf<ListenerRegistration>()
@@ -50,10 +60,15 @@ class SyncManager(private val dao: AmalDao) {
         stop()
         activeUid = uid
         scope.launch {
-            val root = userRoot(uid)
-            pullAll(root)
-            pushAll()
-            listen(root)
+            try {
+                val root = userRoot(uid)
+                pullAll(root)
+                pushAll()
+                listen(root)
+                Log.d(TAG, "sync started for uid=$uid, projectId=${firestore.app.options.projectId}")
+            } catch (e: Exception) {
+                Log.e(TAG, "sync start failed", e)
+            }
         }
     }
 
@@ -116,11 +131,14 @@ class SyncManager(private val dao: AmalDao) {
     fun deleteRemote(collection: String, syncId: String) {
         val uid = activeUid ?: return
         userRoot(uid).collection(collection).document(syncId).delete()
+            .addOnFailureListener { Log.e(TAG, "delete $collection/$syncId failed", it) }
     }
 
     private fun write(collection: String, syncId: String, data: Map<String, Any?>) {
         val uid = activeUid ?: return
         userRoot(uid).collection(collection).document(syncId).set(data)
+            .addOnSuccessListener { Log.d(TAG, "write $collection/$syncId ok") }
+            .addOnFailureListener { Log.e(TAG, "write $collection/$syncId failed", it) }
     }
 
     private suspend fun pushAll() {
@@ -135,7 +153,7 @@ class SyncManager(private val dao: AmalDao) {
 
     private suspend fun pullAll(root: DocumentReference) {
         for (name in collections) {
-            root.collection(name).get().awaitResult().documents.forEach { applyDocument(name, it) }
+            root.collection(name).get(Source.SERVER).awaitResult().documents.forEach { applyDocument(name, it) }
         }
     }
 

@@ -40,14 +40,6 @@ abstract class AmalDatabase : RoomDatabase() {
                             Instance?.let { database ->
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val dao = database.amalDao()
-                                    val initialDhikirs = listOf(
-                                        Dhikir(name = "SubhanAllah", arabicName = "سُبْحَانَ ٱللَّٰهِ", category = "Daily"),
-                                        Dhikir(name = "Alhamdulillah", arabicName = "ٱلْحَمْدُ لِلَّٰهِ", category = "Daily"),
-                                        Dhikir(name = "Allahu Akbar", arabicName = "ٱللَّٰهُ أَكْبَرُ", category = "Daily"),
-                                        Dhikir(name = "La ilaha illallah", arabicName = "لَا إِلَٰهَ إِلَّا ٱللَّٰهُ", category = "Daily")
-                                    )
-                                    initialDhikirs.forEach { dao.insertDhikir(it) }
-
                                     val initialFastingTypes = listOf(
                                         FastingType(name = "Mondays & Thursdays", arabicName = "الإثنين والخميس"),
                                         FastingType(name = "Ayyam al-Bidh (White Days)", arabicName = "أيام البيض"),

@@ -33,6 +33,7 @@ class PreferencesManager(private val context: Context) {
     private val authEmailKey = stringPreferencesKey("auth_email")
     private val authPhotoKey = stringPreferencesKey("auth_photo_url")
     private val hijriDateOffsetKey = intPreferencesKey("hijri_date_offset")
+    private val defaultDhikirSeedVersionKey = intPreferencesKey("default_dhikir_seed_version")
 
     val calendarType: Flow<CalendarType> = context.dataStore.data
         .map { preferences ->
@@ -104,6 +105,15 @@ class PreferencesManager(private val context: Context) {
     suspend fun setHijriDateOffset(offsetDays: Int) {
         context.dataStore.edit { preferences ->
             preferences[hijriDateOffsetKey] = offsetDays
+        }
+    }
+
+    suspend fun getDefaultDhikirSeedVersion(): Int =
+        context.dataStore.data.first()[defaultDhikirSeedVersionKey] ?: 0
+
+    suspend fun setDefaultDhikirSeedVersion(version: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[defaultDhikirSeedVersionKey] = version
         }
     }
 }

@@ -1,11 +1,16 @@
 package com.bindraft.amaldhikirtracker
 
 import android.app.Application
+import com.bindraft.amaldhikirtracker.data.DefaultDhikirSeeder
 import com.bindraft.amaldhikirtracker.data.local.AmalDatabase
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.data.sync.SyncManager
 import com.bindraft.amaldhikirtracker.util.LocationTracker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class AmalApplication : Application() {
     val database by lazy { AmalDatabase.getDatabase(this) }
@@ -17,5 +22,8 @@ class AmalApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         syncManager.attach()
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            DefaultDhikirSeeder(repository, preferencesManager).seed()
+        }
     }
 }
