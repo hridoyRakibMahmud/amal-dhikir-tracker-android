@@ -103,6 +103,15 @@ class AmalRepository(
         return id
     }
 
+    suspend fun changeFastingTypeSyncId(fastingType: FastingType, newSyncId: String) {
+        val oldSyncId = fastingType.syncId
+        val updated = fastingType.copy(syncId = newSyncId, updatedAt = now())
+        amalDao.insertFastingType(updated)
+        syncManager.deleteRemote("fastingTypes", oldSyncId)
+        syncManager.pushFastingType(updated)
+        amalDao.getFastingLogsForType(updated.id).forEach { syncManager.pushFastingLog(it) }
+    }
+
     suspend fun deleteFastingType(fastingType: FastingType) {
         amalDao.deleteFastingType(fastingType)
         syncManager.deleteRemote("fastingTypes", fastingType.syncId)

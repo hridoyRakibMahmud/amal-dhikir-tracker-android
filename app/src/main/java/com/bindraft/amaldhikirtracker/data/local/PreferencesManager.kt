@@ -34,6 +34,7 @@ class PreferencesManager(private val context: Context) {
     private val authPhotoKey = stringPreferencesKey("auth_photo_url")
     private val hijriDateOffsetKey = intPreferencesKey("hijri_date_offset")
     private val defaultDhikirSeedVersionKey = intPreferencesKey("default_dhikir_seed_version")
+    private val defaultFastingSeedVersionKey = intPreferencesKey("default_fasting_seed_version")
 
     val calendarType: Flow<CalendarType> = context.dataStore.data
         .map { preferences ->
@@ -114,6 +115,15 @@ class PreferencesManager(private val context: Context) {
     suspend fun setDefaultDhikirSeedVersion(version: Int) {
         context.dataStore.edit { preferences ->
             preferences[defaultDhikirSeedVersionKey] = version
+        }
+    }
+
+    suspend fun getDefaultFastingSeedVersion(): Int =
+        context.dataStore.data.first()[defaultFastingSeedVersionKey] ?: 0
+
+    suspend fun setDefaultFastingSeedVersion(version: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[defaultFastingSeedVersionKey] = version
         }
     }
 }

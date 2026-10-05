@@ -127,4 +127,7 @@ interface AmalDao {
 
     @Query("SELECT * FROM fasting_types WHERE id = :id")
     suspend fun getFastingTypeById(id: Long): FastingType?
+
+    @Query("SELECT * FROM fasting_logs WHERE fastingTypeId = :typeId")
+    suspend fun getFastingLogsForType(typeId: Long): List<FastingLog>
 }
