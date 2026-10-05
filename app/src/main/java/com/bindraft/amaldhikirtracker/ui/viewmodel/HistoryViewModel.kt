@@ -9,21 +9,22 @@ import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
 import com.bindraft.amaldhikirtracker.util.LocationTracker
-import com.bindraft.amaldhikirtracker.util.resolveSpiritualDate
+import com.bindraft.amaldhikirtracker.util.SpiritualDayProvider
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
 
 class HistoryViewModel(
     private val repository: AmalRepository,
     private val preferencesManager: PreferencesManager,
-    private val locationTracker: LocationTracker
+    private val locationTracker: LocationTracker,
+    private val spiritualDay: SpiritualDayProvider
 ) : ViewModel() {
 
     private val _dateRange = MutableStateFlow(7)
     val dateRange: StateFlow<Int> = _dateRange.asStateFlow()
 
-    val historyState: StateFlow<HistoryState> = _dateRange.flatMapLatest { days ->
-        val endDate = resolveSpiritualDate(preferencesManager, locationTracker)
+    val historyState: StateFlow<HistoryState> = combine(_dateRange, spiritualDay.date) { days, endDate -> days to endDate }
+        .flatMapLatest { (days, endDate) ->
         val startDate = endDate.minusDays(days.toLong() - 1)
 
         combine(
@@ -70,12 +71,13 @@ class HistoryViewModel(
     class Factory(
         private val repository: AmalRepository,
         private val preferencesManager: PreferencesManager,
-        private val locationTracker: LocationTracker
+        private val locationTracker: LocationTracker,
+        private val spiritualDay: SpiritualDayProvider
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: java.lang.Class<T>): T {
             if (modelClass.isAssignableFrom(HistoryViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return HistoryViewModel(repository, preferencesManager, locationTracker) as T
+                return HistoryViewModel(repository, preferencesManager, locationTracker, spiritualDay) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

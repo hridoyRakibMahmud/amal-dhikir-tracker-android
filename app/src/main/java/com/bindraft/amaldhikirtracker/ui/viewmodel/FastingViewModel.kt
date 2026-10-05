@@ -10,7 +10,7 @@ import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.util.FastingRules
 import com.bindraft.amaldhikirtracker.util.HijriCalendar
 import com.bindraft.amaldhikirtracker.util.LocationTracker
-import com.bindraft.amaldhikirtracker.util.resolveSpiritualDate
+import com.bindraft.amaldhikirtracker.util.SpiritualDayProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -24,11 +24,14 @@ data class RamadanSummary(val hijriYear: Int, val fasted: Int, val missed: Int, 
 class FastingViewModel(
     private val repository: AmalRepository,
     private val preferencesManager: PreferencesManager,
-    private val locationTracker: LocationTracker
+    private val locationTracker: LocationTracker,
+    private val spiritualDay: SpiritualDayProvider
 ) : ViewModel() {
 
-    private val _spiritualDate = MutableStateFlow(LocalDate.now())
-    val spiritualDate: StateFlow<LocalDate> = _spiritualDate.asStateFlow()
+    val spiritualDate: StateFlow<LocalDate> = spiritualDay.date
+
+    // Once the user pages or jumps the calendar, stop following the day's rollover.
+    private var userNavigated = false
 
     private val _visibleHijriYear = MutableStateFlow(1447)
     private val _visibleHijriMonth = MutableStateFlow(1)
@@ -95,28 +98,32 @@ class FastingViewModel(
 
     init {
         viewModelScope.launch {
-            val date = resolveSpiritualDate(preferencesManager, locationTracker)
-            _spiritualDate.value = date
-            val offset = preferencesManager.hijriDateOffset.first()
-            val hijri = HijriCalendar.from(date, offset)
-            _visibleHijriYear.value = hijri.year
-            _visibleHijriMonth.value = hijri.month
+            combine(spiritualDate, hijriOffset) { date, offset -> HijriCalendar.from(date, offset) }
+                .collect { hijri ->
+                    if (!userNavigated) {
+                        _visibleHijriYear.value = hijri.year
+                        _visibleHijriMonth.value = hijri.month
+                    }
+                }
         }
     }
 
     fun nextMonth() {
+        userNavigated = true
         val (year, month) = HijriCalendar.addMonths(_visibleHijriYear.value, _visibleHijriMonth.value, 1)
         _visibleHijriYear.value = year
         _visibleHijriMonth.value = month
     }
 
     fun previousMonth() {
+        userNavigated = true
         val (year, month) = HijriCalendar.addMonths(_visibleHijriYear.value, _visibleHijriMonth.value, -1)
         _visibleHijriYear.value = year
         _visibleHijriMonth.value = month
     }
 
     fun jumpToDate(date: LocalDate) {
+        userNavigated = true
         val hijri = HijriCalendar.from(date, hijriOffset.value)
         _visibleHijriYear.value = hijri.year
         _visibleHijriMonth.value = hijri.month
@@ -124,7 +131,7 @@ class FastingViewModel(
 
     fun toggleDay(date: LocalDate, fastingTypeId: Long?) {
         if (FastingRules.isFastingForbidden(date, hijriOffset.value)) return
-        if (date.isAfter(_spiritualDate.value)) return
+        if (date.isAfter(spiritualDate.value)) return
         viewModelScope.launch {
             val existing = repository.getFastingLog(date)
             if (existing != null) {
@@ -150,12 +157,13 @@ class FastingViewModel(
     class Factory(
         private val repository: AmalRepository,
         private val preferencesManager: PreferencesManager,
-        private val locationTracker: LocationTracker
+        private val locationTracker: LocationTracker,
+        private val spiritualDay: SpiritualDayProvider
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(FastingViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return FastingViewModel(repository, preferencesManager, locationTracker) as T
+                return FastingViewModel(repository, preferencesManager, locationTracker, spiritualDay) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

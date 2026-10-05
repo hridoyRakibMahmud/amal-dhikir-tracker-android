@@ -14,6 +14,11 @@ import com.bindraft.amaldhikirtracker.ui.screens.MainScreen
 import com.bindraft.amaldhikirtracker.ui.theme.AmalDhikirTrackerTheme
 
 class MainActivity : ComponentActivity() {
+    override fun onStart() {
+        super.onStart()
+        (application as AmalApplication).spiritualDay.onForeground()
+    }
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->

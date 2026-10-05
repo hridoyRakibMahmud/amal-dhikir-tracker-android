@@ -8,7 +8,7 @@ import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.DhikirLog
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.util.LocationTracker
-import com.bindraft.amaldhikirtracker.util.resolveSpiritualDate
+import com.bindraft.amaldhikirtracker.util.SpiritualDayProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,11 +23,11 @@ class CounterViewModel(
     private val repository: AmalRepository,
     private val preferencesManager: PreferencesManager,
     private val locationTracker: LocationTracker,
+    private val spiritualDay: SpiritualDayProvider,
     private val dhikirId: Long
 ) : ViewModel() {
 
-    private val _spiritualDate = MutableStateFlow(LocalDate.now())
-    val spiritualDate: StateFlow<LocalDate> = _spiritualDate.asStateFlow()
+    val spiritualDate: StateFlow<LocalDate> = spiritualDay.date
 
     private val _dhikir = MutableStateFlow<Dhikir?>(null)
     val dhikir: StateFlow<Dhikir?> = _dhikir.asStateFlow()
@@ -40,7 +40,7 @@ class CounterViewModel(
     // so they must not be double-counted when the tap portion is flushed on save/reset).
     private var unpersistedTaps = 0
 
-    val totalToday: StateFlow<Int> = _spiritualDate
+    val totalToday: StateFlow<Int> = spiritualDate
         .flatMapLatest { date -> repository.getDhikirLogsByDate(date) }
         .map { logs -> logs.find { it.dhikirId == dhikirId }?.count ?: 0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -48,7 +48,6 @@ class CounterViewModel(
     init {
         viewModelScope.launch {
             _dhikir.value = repository.getDhikirById(dhikirId)
-            _spiritualDate.value = resolveSpiritualDate(preferencesManager, locationTracker)
         }
     }
 
@@ -67,7 +66,7 @@ class CounterViewModel(
         if (amount <= 0) return
         viewModelScope.launch {
             repository.upsertDhikirLog(
-                DhikirLog(dhikirId = dhikirId, count = amount, date = _spiritualDate.value)
+                DhikirLog(dhikirId = dhikirId, count = amount, date = spiritualDate.value)
             )
             _sessionCount.value += amount
         }
@@ -84,7 +83,7 @@ class CounterViewModel(
         viewModelScope.launch {
             if (unpersistedTaps > 0) {
                 repository.upsertDhikirLog(
-                    DhikirLog(dhikirId = dhikirId, count = unpersistedTaps, date = _spiritualDate.value)
+                    DhikirLog(dhikirId = dhikirId, count = unpersistedTaps, date = spiritualDate.value)
                 )
             }
             _sessionCount.value = 0
@@ -96,12 +95,13 @@ class CounterViewModel(
         private val repository: AmalRepository,
         private val preferencesManager: PreferencesManager,
         private val locationTracker: LocationTracker,
+        private val spiritualDay: SpiritualDayProvider,
         private val dhikirId: Long
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(CounterViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return CounterViewModel(repository, preferencesManager, locationTracker, dhikirId) as T
+                return CounterViewModel(repository, preferencesManager, locationTracker, spiritualDay, dhikirId) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

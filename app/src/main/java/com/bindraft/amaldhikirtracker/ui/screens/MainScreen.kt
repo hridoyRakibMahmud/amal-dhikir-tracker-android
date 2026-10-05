@@ -38,9 +38,10 @@ fun MainScreen(
     val navController = rememberNavController()
     val trackerViewModel: TrackerViewModel = viewModel(
         factory = TrackerViewModel.Factory(
-            application.repository, 
+            application.repository,
             application.preferencesManager,
-            application.locationTracker
+            application.locationTracker,
+            application.spiritualDay
         )
     )
 
@@ -119,6 +120,7 @@ fun MainScreen(
                             application.repository,
                             application.preferencesManager,
                             application.locationTracker,
+                            application.spiritualDay,
                             dhikirId
                         )
                     )
@@ -132,7 +134,8 @@ fun MainScreen(
                         factory = HistoryViewModel.Factory(
                             application.repository,
                             application.preferencesManager,
-                            application.locationTracker
+                            application.locationTracker,
+                            application.spiritualDay
                         )
                     )
                     HistoryScreen(
@@ -160,7 +163,8 @@ fun MainScreen(
                         factory = FastingViewModel.Factory(
                             application.repository,
                             application.preferencesManager,
-                            application.locationTracker
+                            application.locationTracker,
+                            application.spiritualDay
                         )
                     )
                     FastingScreen(

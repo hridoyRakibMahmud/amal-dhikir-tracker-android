@@ -11,13 +11,10 @@ import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.util.HijriCalendar
 import com.bindraft.amaldhikirtracker.util.LocationTracker
-import com.bindraft.amaldhikirtracker.util.SunsetCalculator
+import com.bindraft.amaldhikirtracker.util.SpiritualDayProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -25,13 +22,13 @@ import java.util.Locale
 class TrackerViewModel(
     private val repository: AmalRepository,
     private val preferencesManager: PreferencesManager,
-    private val locationTracker: LocationTracker
+    private val locationTracker: LocationTracker,
+    private val spiritualDay: SpiritualDayProvider
 ) : ViewModel() {
 
-    private val _spiritualDate = MutableStateFlow(LocalDate.now())
-    val spiritualDate: StateFlow<LocalDate> = _spiritualDate.asStateFlow()
+    val spiritualDate: StateFlow<LocalDate> = spiritualDay.date
 
-    val currentDate: StateFlow<LocalDate> = _spiritualDate // Compatibility
+    val currentDate: StateFlow<LocalDate> = spiritualDate // Compatibility
 
     val calendarType: StateFlow<CalendarType> = preferencesManager.calendarType
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CalendarType.HIJRI)
@@ -58,7 +55,7 @@ class TrackerViewModel(
         if (type == CalendarType.HIJRI) hijri to "$gregorian · Gregorian" else gregorian to "$hijri · Hijri"
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "" to "")
 
-    val todaySalatLogs: StateFlow<List<SalatLog>> = _spiritualDate
+    val todaySalatLogs: StateFlow<List<SalatLog>> = spiritualDate
         .flatMapLatest { date -> repository.getSalatLogsByDate(date) }
         .map { logs ->
             // Display order: Fard rows chronological (Fajr → Isha), then Nafl rows.
@@ -70,7 +67,7 @@ class TrackerViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val todayDhikirLogs: StateFlow<List<DhikirLog>> = _spiritualDate
+    val todayDhikirLogs: StateFlow<List<DhikirLog>> = spiritualDate
         .flatMapLatest { date -> repository.getDhikirLogsByDate(date) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -86,7 +83,7 @@ class TrackerViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Consecutive spiritual days (ending today) where all 5 Fard prayers were completed.
-    val streak: StateFlow<Int> = _spiritualDate
+    val streak: StateFlow<Int> = spiritualDate
         .flatMapLatest { date ->
             repository.getSalatLogsInRange(date.minusDays(60), date).map { logs -> computeStreak(logs, date) }
         }
@@ -108,33 +105,9 @@ class TrackerViewModel(
     }
 
     init {
-        refreshSpiritualDate()
-    }
-
-    fun refreshSpiritualDate() {
         viewModelScope.launch {
-            val now = LocalDateTime.now()
-            val location = locationTracker.getCurrentLocation()
-            var sunset = LocalTime.of(18, 0) // Default
-
-            if (location != null) {
-                preferencesManager.updateLocation(location.latitude, location.longitude)
-                sunset = SunsetCalculator.getSunsetTime(location.latitude, location.longitude, ZonedDateTime.now())
-            } else {
-                val lastLoc = preferencesManager.getLastLocation()
-                if (lastLoc != null) {
-                    sunset = SunsetCalculator.getSunsetTime(lastLoc.first, lastLoc.second, ZonedDateTime.now())
-                }
-            }
-
-            val newSpiritualDate = if (now.toLocalTime().isAfter(sunset)) {
-                now.toLocalDate().plusDays(1)
-            } else {
-                now.toLocalDate()
-            }
-            
-            _spiritualDate.value = newSpiritualDate
-            ensureInitialSalats()
+            spiritualDay.ready.first { it }
+            spiritualDate.collect { ensureInitialSalats() }
         }
     }
 
@@ -148,7 +121,7 @@ class TrackerViewModel(
             val voluntarySalats = listOf("Tahajjud", "Duha")
             val voluntaryIcons = mapOf("Tahajjud" to "bedtime", "Duha" to "wb_sunny")
             val voluntaryArabic = mapOf("Tahajjud" to "التهجد", "Duha" to "الضحى")
-            val targetDate = _spiritualDate.value
+            val targetDate = spiritualDate.value
 
             fardSalats.forEach { name ->
                 val existing = repository.getSalatLogByName(name, targetDate)
@@ -202,7 +175,7 @@ class TrackerViewModel(
                     salatName = name,
                     type = "VOLUNTARY",
                     isCompleted = false,
-                    date = _spiritualDate.value,
+                    date = spiritualDate.value,
                     icon = icon
                 )
             )
@@ -238,12 +211,13 @@ class TrackerViewModel(
     class Factory(
         private val repository: AmalRepository,
         private val preferencesManager: PreferencesManager,
-        private val locationTracker: LocationTracker
+        private val locationTracker: LocationTracker,
+        private val spiritualDay: SpiritualDayProvider
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(TrackerViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return TrackerViewModel(repository, preferencesManager, locationTracker) as T
+                return TrackerViewModel(repository, preferencesManager, locationTracker, spiritualDay) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
