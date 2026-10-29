@@ -24,12 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bindraft.amaldhikirtracker.R
+import com.bindraft.amaldhikirtracker.data.local.AppLanguage
 import com.bindraft.amaldhikirtracker.data.local.CalendarType
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
 import com.bindraft.amaldhikirtracker.data.local.ThemeMode
+import com.bindraft.amaldhikirtracker.data.local.applyAppLanguage
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 
@@ -45,6 +49,7 @@ fun SettingsScreen(
     val themeMode by preferencesManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
     val hijriOffset by preferencesManager.hijriDateOffset.collectAsState(initial = 0)
     val authProfile by preferencesManager.authProfile.collectAsState(initial = null)
+    val appLanguage by preferencesManager.appLanguage.collectAsState(initial = AppLanguage.ENGLISH)
     val scope = rememberCoroutineScope()
 
     LazyColumn(
@@ -56,7 +61,7 @@ fun SettingsScreen(
     ) {
         item {
             Text(
-                text = "Settings",
+                text = stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.text,
@@ -64,7 +69,7 @@ fun SettingsScreen(
             )
         }
 
-        item { SettingsSectionHeader("PROFILE") }
+        item { SettingsSectionHeader(stringResource(R.string.settings_section_profile)) }
         item {
             SettingsCard(modifier = Modifier.padding(bottom = 18.dp)) {
                 Row(
@@ -86,13 +91,13 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            authProfile?.displayName ?: "Guest",
+                            authProfile?.displayName ?: stringResource(R.string.settings_guest),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.text
                         )
                         Text(
-                            authProfile?.email ?: "Sign in to sync your data",
+                            authProfile?.email ?: stringResource(R.string.settings_signin_prompt),
                             style = MaterialTheme.typography.bodySmall,
                             color = AppTheme.colors.textMuted
                         )
@@ -102,7 +107,7 @@ fun SettingsScreen(
             }
         }
 
-        item { SettingsSectionHeader("PREFERENCES") }
+        item { SettingsSectionHeader(stringResource(R.string.settings_section_preferences)) }
         item {
             SettingsCard(modifier = Modifier.padding(bottom = 18.dp)) {
                 Column {
@@ -111,13 +116,16 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Calendar type",
+                            stringResource(R.string.settings_calendar_type),
                             style = MaterialTheme.typography.bodyLarge,
                             color = AppTheme.colors.text,
                             modifier = Modifier.weight(1f)
                         )
                         SegmentedPill(
-                            options = listOf(CalendarType.HIJRI to "Hijri", CalendarType.GREGORIAN to "Gregorian"),
+                            options = listOf(
+                                CalendarType.HIJRI to stringResource(R.string.common_hijri),
+                                CalendarType.GREGORIAN to stringResource(R.string.common_gregorian)
+                            ),
                             selected = calendarType,
                             onSelect = { scope.launch { preferencesManager.setCalendarType(it) } }
                         )
@@ -128,7 +136,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Appearance",
+                            stringResource(R.string.settings_appearance),
                             style = MaterialTheme.typography.bodyLarge,
                             color = AppTheme.colors.text,
                             modifier = Modifier.weight(1f)
@@ -150,12 +158,12 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Hijri date adjustment",
+                                stringResource(R.string.settings_hijri_offset_title),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = AppTheme.colors.text
                             )
                             Text(
-                                "Matches your local moon-sighting announcement",
+                                stringResource(R.string.settings_hijri_offset_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = AppTheme.colors.textMuted
                             )
@@ -167,40 +175,66 @@ fun SettingsScreen(
                             }
                         )
                     }
+                    HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.settings_language_title),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = AppTheme.colors.text
+                            )
+                            Text(
+                                stringResource(R.string.settings_language_subtitle),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AppTheme.colors.textMuted
+                            )
+                        }
+                        SegmentedPill(
+                            options = listOf(AppLanguage.ENGLISH to "English", AppLanguage.BANGLA to "বাংলা"),
+                            selected = appLanguage,
+                            onSelect = { language ->
+                                scope.launch { preferencesManager.setAppLanguage(language) }
+                                applyAppLanguage(language)
+                            }
+                        )
+                    }
                 }
             }
         }
 
-        item { SettingsSectionHeader("CONTENT") }
+        item { SettingsSectionHeader(stringResource(R.string.settings_section_content)) }
         item {
             SettingsCard(modifier = Modifier.padding(bottom = 18.dp)) {
                 SettingsMenuItem(
-                    title = "Manage Dhikirs",
-                    subtitle = "Add, edit or remove custom dhikirs",
+                    title = stringResource(R.string.settings_manage_dhikirs_title),
+                    subtitle = stringResource(R.string.settings_manage_dhikirs_subtitle),
                     icon = Icons.AutoMirrored.Rounded.List,
                     onClick = onNavigateToManageDhikirs
                 )
                 HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
                 SettingsMenuItem(
-                    title = "Fasting Track",
-                    subtitle = "Track your fasting days",
+                    title = stringResource(R.string.settings_fasting_title),
+                    subtitle = stringResource(R.string.settings_fasting_subtitle),
                     icon = Icons.Rounded.CalendarMonth,
                     onClick = onNavigateToFasting
                 )
                 HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
                 SettingsMenuItem(
-                    title = "Quran Reading",
-                    subtitle = "Track daily ayahs read",
+                    title = stringResource(R.string.settings_quran_title),
+                    subtitle = stringResource(R.string.settings_quran_subtitle),
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
                     onClick = onNavigateToQuran
                 )
             }
         }
 
-        item { SettingsSectionHeader("ABOUT") }
+        item { SettingsSectionHeader(stringResource(R.string.settings_section_about)) }
         item {
             SettingsCard(modifier = Modifier.padding(bottom = 18.dp)) {
-                SettingsMenuItem(title = "App Version", subtitle = "1.0.0", icon = null, onClick = {})
+                SettingsMenuItem(title = stringResource(R.string.settings_app_version), subtitle = "1.0.0", icon = null, onClick = {})
             }
         }
     }
@@ -284,7 +318,7 @@ private fun AppearanceToggle(isDark: Boolean, onToggle: () -> Unit) {
 private fun OffsetStepper(value: Int, onChange: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { onChange(value - 1) }, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Rounded.Remove, contentDescription = "Decrease", tint = AppTheme.colors.text, modifier = Modifier.size(16.dp))
+            Icon(Icons.Rounded.Remove, contentDescription = stringResource(R.string.common_decrease), tint = AppTheme.colors.text, modifier = Modifier.size(16.dp))
         }
         Text(
             text = if (value > 0) "+$value" else value.toString(),
@@ -295,7 +329,7 @@ private fun OffsetStepper(value: Int, onChange: (Int) -> Unit) {
             modifier = Modifier.widthIn(min = 24.dp)
         )
         IconButton(onClick = { onChange(value + 1) }, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Rounded.Add, contentDescription = "Increase", tint = AppTheme.colors.text, modifier = Modifier.size(16.dp))
+            Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.common_increase), tint = AppTheme.colors.text, modifier = Modifier.size(16.dp))
         }
     }
 }

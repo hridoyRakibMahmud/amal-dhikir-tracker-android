@@ -68,6 +68,27 @@ class AmalRepository(
         syncManager.deleteRemote("dhikirs", dhikir.syncId)
     }
 
+    /** Renames a dhikir and gives it a new syncId, relinking all its logs to match (same pattern as [changeFastingTypeSyncId]). */
+    suspend fun changeDhikirSyncId(dhikir: Dhikir, newSyncId: String, newName: String? = null) {
+        val oldSyncId = dhikir.syncId
+        val updated = dhikir.copy(syncId = newSyncId, name = newName ?: dhikir.name, updatedAt = now())
+        amalDao.updateDhikir(updated)
+        syncManager.deleteRemote("dhikirs", oldSyncId)
+        syncManager.pushDhikir(updated)
+        amalDao.getDhikirLogsForDhikir(updated.id).forEach { log ->
+            val relinked = log.copy(syncId = "${updated.syncId}_${log.date}", updatedAt = now())
+            amalDao.insertDhikirLog(relinked)
+            syncManager.pushDhikirLog(relinked)
+        }
+    }
+
+    /** Adds [duplicateId]'s logged counts onto [primaryId] (same date = summed), leaving duplicate's own logs untouched for the caller to clean up. */
+    suspend fun mergeDhikirLogsInto(primaryId: Long, duplicateId: Long) {
+        amalDao.getDhikirLogsForDhikir(duplicateId).forEach { log ->
+            upsertDhikirLog(DhikirLog(dhikirId = primaryId, count = log.count, date = log.date))
+        }
+    }
+
     fun getTotalCountForDhikir(dhikirId: Long): Flow<Int> =
         amalDao.getTotalCountForDhikir(dhikirId)
 

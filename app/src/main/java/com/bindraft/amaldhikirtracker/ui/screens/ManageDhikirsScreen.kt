@@ -16,9 +16,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
 import com.bindraft.amaldhikirtracker.ui.theme.NotoNaskhArabic
@@ -44,10 +46,10 @@ fun ManageDhikirsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.text)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back), tint = AppTheme.colors.text)
             }
             Text(
-                text = "Manage Dhikirs",
+                text = stringResource(R.string.settings_manage_dhikirs_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.text
@@ -140,7 +142,7 @@ private fun DhikirManagementItem(
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
                         Icon(
                             Icons.Rounded.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.common_delete),
                             tint = AppTheme.colors.danger,
                             modifier = Modifier.size(18.dp)
                         )
@@ -154,30 +156,30 @@ private fun DhikirManagementItem(
                     OutlinedTextField(
                         value = text,
                         onValueChange = { if (it.all { c -> c.isDigit() }) text = it },
-                        placeholder = { Text("e.g. 100") },
+                        placeholder = { Text(stringResource(R.string.common_target_placeholder)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = onCancelEditTarget) { Text("Cancel") }
+                    TextButton(onClick = onCancelEditTarget) { Text(stringResource(R.string.common_cancel)) }
                     TextButton(onClick = { onSaveTarget(text.toIntOrNull()) }) {
-                        Text("Save", color = AppTheme.colors.gold, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.common_save), color = AppTheme.colors.gold, fontWeight = FontWeight.Bold)
                     }
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     val target = dhikir.dailyTarget
                     Text(
-                        text = if (target != null && target > 0) "$todayCount / $target today" else "No target set",
+                        text = if (target != null && target > 0) stringResource(R.string.target_progress_today, todayCount, target) else stringResource(R.string.manage_no_target),
                         style = MaterialTheme.typography.bodySmall,
                         color = AppTheme.colors.textMuted,
                         modifier = Modifier.weight(1f)
                     )
                     if (target != null && target > 0) {
                         Text(
-                            text = "Edit target",
+                            text = stringResource(R.string.manage_edit_target),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.gold,
@@ -185,7 +187,7 @@ private fun DhikirManagementItem(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Clear",
+                            text = stringResource(R.string.common_clear),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.gold,
@@ -193,7 +195,7 @@ private fun DhikirManagementItem(
                         )
                     } else {
                         Text(
-                            text = "Set target",
+                            text = stringResource(R.string.manage_set_target),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.gold,
@@ -222,7 +224,7 @@ private fun DashedAddButton(onClick: () -> Unit) {
             Icon(Icons.Rounded.Add, contentDescription = null, tint = AppTheme.colors.textMuted)
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Add custom Dhikir",
+                text = stringResource(R.string.manage_add_custom_dhikir),
                 style = MaterialTheme.typography.labelLarge,
                 color = AppTheme.colors.textMuted
             )
@@ -241,27 +243,27 @@ private fun AddDhikirDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Custom Dhikir") },
+        title = { Text(stringResource(R.string.manage_add_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.common_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = arabicName,
                     onValueChange = { arabicName = it },
-                    label = { Text("Arabic (Optional)") },
+                    label = { Text(stringResource(R.string.common_arabic_optional_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = category,
                     onValueChange = { category = it },
-                    label = { Text("Category (Optional)") },
+                    label = { Text(stringResource(R.string.manage_category_optional_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -272,11 +274,11 @@ private fun AddDhikirDialog(
                 onClick = { if (name.isNotBlank()) onSave(name, arabicName.ifBlank { null }, category.ifBlank { null }) },
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen)
             ) {
-                Text("Save")
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

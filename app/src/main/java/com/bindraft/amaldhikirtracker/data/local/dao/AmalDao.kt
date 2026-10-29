@@ -133,6 +133,9 @@ interface AmalDao {
     @Query("SELECT * FROM fasting_logs WHERE fastingTypeId = :typeId")
     suspend fun getFastingLogsForType(typeId: Long): List<FastingLog>
 
+    @Query("SELECT * FROM dhikir_logs WHERE dhikirId = :dhikirId")
+    suspend fun getDhikirLogsForDhikir(dhikirId: Long): List<DhikirLog>
+
     // Quran Modes
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuranMode(quranMode: QuranMode): Long

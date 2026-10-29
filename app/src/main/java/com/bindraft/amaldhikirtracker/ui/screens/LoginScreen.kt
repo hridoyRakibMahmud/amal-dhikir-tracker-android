@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,7 +43,7 @@ fun LoginScreen(
             .background(AppTheme.colors.background)
     ) {
         IconButton(onClick = onNavigateBack, modifier = Modifier.padding(8.dp)) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.text)
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back), tint = AppTheme.colors.text)
         }
 
         Column(
@@ -72,7 +73,7 @@ fun LoginScreen(
 
             if (authProfile != null) {
                 Text(
-                    text = "Signed in as",
+                    text = stringResource(R.string.login_signed_in_as),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.colors.textMuted
                 )
@@ -98,11 +99,11 @@ fun LoginScreen(
                     border = BorderStroke(1.dp, AppTheme.colors.border),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.danger)
                 ) {
-                    Text("Sign out")
+                    Text(stringResource(R.string.login_sign_out))
                 }
             } else {
                 Text(
-                    text = "Welcome back",
+                    text = stringResource(R.string.login_welcome_back),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = AppTheme.colors.text,
@@ -110,7 +111,7 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Your prayers and dhikir are already saved on this device. Sign in to back them up and sync across devices.",
+                    text = stringResource(R.string.login_signin_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.colors.textMuted,
                     textAlign = TextAlign.Center
@@ -134,7 +135,7 @@ fun LoginScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Sign in with Google")
+                        Text(stringResource(R.string.login_sign_in_google))
                     }
                 }
 

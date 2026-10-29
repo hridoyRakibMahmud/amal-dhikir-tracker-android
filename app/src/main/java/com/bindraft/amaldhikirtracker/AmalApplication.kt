@@ -6,6 +6,7 @@ import com.bindraft.amaldhikirtracker.data.DefaultFastingTypeSeeder
 import com.bindraft.amaldhikirtracker.data.DefaultQuranModeSeeder
 import com.bindraft.amaldhikirtracker.data.local.AmalDatabase
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
+import com.bindraft.amaldhikirtracker.data.local.applyAppLanguage
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.data.sync.SyncManager
 import com.bindraft.amaldhikirtracker.util.LocationTracker
@@ -29,6 +30,7 @@ class AmalApplication : Application() {
         syncManager.attach()
         spiritualDay.start()
         appScope.launch {
+            applyAppLanguage(preferencesManager.getAppLanguage())
             DefaultDhikirSeeder(repository, preferencesManager).seed()
             DefaultFastingTypeSeeder(repository, preferencesManager).seed()
             DefaultQuranModeSeeder(repository, preferencesManager).seed()

@@ -1,6 +1,8 @@
 package com.bindraft.amaldhikirtracker.data.local
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.doublePreferencesKey
@@ -22,6 +24,15 @@ enum class ThemeMode {
     SYSTEM, LIGHT, DARK
 }
 
+enum class AppLanguage(val languageTag: String) {
+    ENGLISH("en"), BANGLA("bn")
+}
+
+/** Applies the per-app locale (survives as an Activity-recreating config change, like AppCompat handles orientation). */
+fun applyAppLanguage(language: AppLanguage) {
+    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.languageTag))
+}
+
 data class AuthProfile(val displayName: String, val email: String?, val photoUrl: String?)
 
 class PreferencesManager(private val context: Context) {
@@ -29,6 +40,7 @@ class PreferencesManager(private val context: Context) {
     private val lastLatKey = doublePreferencesKey("last_lat")
     private val lastLngKey = doublePreferencesKey("last_lng")
     private val themeModeKey = stringPreferencesKey("theme_mode")
+    private val appLanguageKey = stringPreferencesKey("app_language")
     private val authNameKey = stringPreferencesKey("auth_display_name")
     private val authEmailKey = stringPreferencesKey("auth_email")
     private val authPhotoKey = stringPreferencesKey("auth_photo_url")
@@ -60,6 +72,21 @@ class PreferencesManager(private val context: Context) {
             preferences[themeModeKey] = mode.name
         }
     }
+
+    val appLanguage: Flow<AppLanguage> = context.dataStore.data
+        .map { preferences ->
+            val language = preferences[appLanguageKey] ?: AppLanguage.ENGLISH.name
+            AppLanguage.valueOf(language)
+        }
+
+    suspend fun setAppLanguage(language: AppLanguage) {
+        context.dataStore.edit { preferences ->
+            preferences[appLanguageKey] = language.name
+        }
+    }
+
+    suspend fun getAppLanguage(): AppLanguage =
+        AppLanguage.valueOf(context.dataStore.data.first()[appLanguageKey] ?: AppLanguage.ENGLISH.name)
 
     suspend fun updateLocation(lat: Double, lng: Double) {
         context.dataStore.edit { preferences ->

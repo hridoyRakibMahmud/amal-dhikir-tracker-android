@@ -1,5 +1,6 @@
 package com.bindraft.amaldhikirtracker.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -8,16 +9,17 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.bindraft.amaldhikirtracker.R
 
 sealed class Screen(
     val route: String,
-    val label: String? = null,
+    @StringRes val labelRes: Int? = null,
     val icon: ImageVector? = null,
     val selectedIcon: ImageVector? = null
 ) {
     object Tracker : Screen(
         route = "tracker",
-        label = "Home",
+        labelRes = R.string.nav_home,
         icon = Icons.Outlined.Home,
         selectedIcon = Icons.Rounded.Home
     )
@@ -28,7 +30,7 @@ sealed class Screen(
 
     object History : Screen(
         route = "history",
-        label = "History",
+        labelRes = R.string.nav_history,
         icon = Icons.Outlined.History,
         selectedIcon = Icons.Rounded.History
     )
@@ -37,7 +39,7 @@ sealed class Screen(
 
     object Settings : Screen(
         route = "settings",
-        label = "Settings",
+        labelRes = R.string.nav_settings,
         icon = Icons.Outlined.Settings,
         selectedIcon = Icons.Rounded.Settings
     )

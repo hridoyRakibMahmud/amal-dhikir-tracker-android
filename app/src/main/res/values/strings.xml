@@ -1,3 +1,141 @@
 <resources>
     <string name="app_name">Amal &amp; Dhikir Tracker</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common / shared across screens -->
+    <string name="common_back">Back</string>
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_add">Add</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_ok">OK</string>
+    <string name="common_today">Today</string>
+    <string name="common_change_date">Change date</string>
+    <string name="common_date_label">Date</string>
+    <string name="common_name_label">Name</string>
+    <string name="common_arabic_optional_label">Arabic (Optional)</string>
+    <string name="common_target_placeholder">e.g. 100</string>
+    <string name="common_decrease">Decrease</string>
+    <string name="common_increase">Increase</string>
+    <string name="common_hijri">Hijri</string>
+    <string name="common_gregorian">Gregorian</string>
+    <string name="common_dark">Dark</string>
+    <string name="common_light">Light</string>
+    <string name="common_completed">Completed</string>
+    <string name="common_sunnah">Sunnah</string>
+    <string name="common_ramadan">Ramadan</string>
+    <string name="common_fasted">Fasted</string>
+    <string name="common_missed">Missed</string>
+    <string name="common_remaining">Remaining</string>
+    <string name="common_forbidden">Forbidden</string>
+    <string name="common_dhikir_fallback">Dhikir</string>
+    <string name="target_progress_today">%1$d / %2$d today</string>
+
+    <!-- Home (Tracker) -->
+    <string name="tracker_section_fard">SALAH · FARD</string>
+    <string name="tracker_section_nafl">NAFL · VOLUNTARY</string>
+    <string name="tracker_add_action">+ Add</string>
+    <string name="tracker_section_dhikir">DHIKIR</string>
+    <string name="tracker_manage_action">Manage</string>
+    <string name="tracker_nafl_placeholder">e.g. Witr</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_profile">PROFILE</string>
+    <string name="settings_guest">Guest</string>
+    <string name="settings_signin_prompt">Sign in to sync your data</string>
+    <string name="settings_section_preferences">PREFERENCES</string>
+    <string name="settings_calendar_type">Calendar type</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_hijri_offset_title">Hijri date adjustment</string>
+    <string name="settings_hijri_offset_subtitle">Matches your local moon-sighting announcement</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_subtitle">App display language</string>
+    <string name="settings_section_content">CONTENT</string>
+    <string name="settings_manage_dhikirs_title">Manage Dhikirs</string>
+    <string name="settings_manage_dhikirs_subtitle">Add, edit or remove custom dhikirs</string>
+    <string name="settings_fasting_title">Fasting Track</string>
+    <string name="settings_fasting_subtitle">Track your fasting days</string>
+    <string name="settings_quran_title">Quran Reading</string>
+    <string name="settings_quran_subtitle">Track daily ayahs read</string>
+    <string name="settings_section_about">ABOUT</string>
+    <string name="settings_app_version">App Version</string>
+
+    <!-- Counter -->
+    <string name="counter_today_total">Today\'s total</string>
+    <string name="counter_set_target">Set a daily target</string>
+    <string name="counter_manual_add_prompt">Already counted some? Add manually</string>
+    <string name="counter_manual_add_desc">Add a count you already did outside the app</string>
+    <string name="counter_reset_session">Reset Session</string>
+    <string name="counter_complete">Complete</string>
+
+    <!-- Manage Dhikirs -->
+    <string name="manage_no_target">No target set</string>
+    <string name="manage_edit_target">Edit target</string>
+    <string name="manage_set_target">Set target</string>
+    <string name="manage_add_custom_dhikir">Add custom Dhikir</string>
+    <string name="manage_add_dialog_title">Add Custom Dhikir</string>
+    <string name="manage_category_optional_label">Category (Optional)</string>
+
+    <!-- Fasting -->
+    <string name="fasting_title">Nafl Fasting</string>
+    <string name="fasting_prev_month">Previous month</string>
+    <string name="fasting_next_month">Next month</string>
+    <string name="fasting_section_standard">STANDARD SUNNAH FASTS</string>
+    <string name="fasting_add_type_button">Add fasting type</string>
+    <string name="fasting_ramadan_title">Ramadan %1$d AH — mandatory fasts</string>
+    <string name="fasting_dialog_title_logged">Fast logged</string>
+    <string name="fasting_dialog_title_log">Log a fast</string>
+    <string name="fasting_dialog_reason">Reason: %1$s</string>
+    <string name="fasting_no_specific_reason">No specific reason</string>
+    <string name="fasting_reason_optional_label">Reason (optional)</string>
+    <string name="fasting_log_fast_button">Log Fast</string>
+    <string name="fasting_add_type_title">Add Fasting Type</string>
+    <string-array name="calendar_weekday_initials">
+        <item>S</item>
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+    </string-array>
+
+    <!-- Quran Reading -->
+    <string name="quran_prev_week">Previous week</string>
+    <string name="quran_next_week">Next week</string>
+    <string name="quran_week_label">Week %1$d · %2$d</string>
+    <string name="quran_reading_type_label">Reading type</string>
+    <string name="quran_target_progress">%1$d / %2$d ayahs today</string>
+    <string name="quran_today_no_target">%1$d ayahs today</string>
+    <string name="quran_log_section_title">LOG AYAHS READ</string>
+    <string name="quran_ayahs_label">Ayahs</string>
+    <string name="quran_ayahs_placeholder">e.g. 20</string>
+    <string name="quran_edit_limit">Edit limit</string>
+    <string name="quran_set_limit">Set daily limit</string>
+    <string name="quran_edit_total_label">Total ayahs for this day</string>
+
+    <!-- History -->
+    <string name="history_7_days">7 days</string>
+    <string name="history_30_days">30 days</string>
+    <string name="history_salah_completion">Salah completion</string>
+    <string name="history_total_dhikir">Total Dhikir</string>
+    <string name="history_section_salah_chart">SALAH COMPLETED / DAY</string>
+    <string name="history_section_dhikir_chart">DHIKIR LOGGED / DAY</string>
+    <string name="history_section_activity_log">DETAILED ACTIVITY LOG</string>
+    <string name="history_empty">No activity recorded yet.</string>
+    <string name="history_salah_summary">Salah: %1$d/%2$d completed</string>
+
+    <!-- Login -->
+    <string name="login_signed_in_as">Signed in as</string>
+    <string name="login_sign_out">Sign out</string>
+    <string name="login_welcome_back">Welcome back</string>
+    <string name="login_signin_description">Your prayers and dhikir are already saved on this device. Sign in to back them up and sync across devices.</string>
+    <string name="login_sign_in_google">Sign in with Google</string>
 </resources>

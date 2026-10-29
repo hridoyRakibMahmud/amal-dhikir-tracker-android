@@ -16,10 +16,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.entities.QuranMode
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
 import com.bindraft.amaldhikirtracker.ui.viewmodel.QuranViewModel
@@ -36,7 +38,8 @@ fun QuranScreen(
     val selectedMode by viewModel.selectedMode.collectAsState()
     val todayAyahs by viewModel.todayAyahsForSelected.collectAsState()
     val weekDailyAyahs by viewModel.weekDailyAyahs.collectAsState()
-    val weekLabel by viewModel.weekLabel.collectAsState()
+    val weekNumber by viewModel.weekNumber.collectAsState()
+    val weekYear by viewModel.weekYear.collectAsState()
     val spiritualDate by viewModel.spiritualDate.collectAsState()
     var editingTarget by remember { mutableStateOf(false) }
     var ayahsText by remember { mutableStateOf("") }
@@ -54,10 +57,10 @@ fun QuranScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.text)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back), tint = AppTheme.colors.text)
             }
             Text(
-                text = "Quran Reading",
+                text = stringResource(R.string.settings_quran_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.text
@@ -102,7 +105,7 @@ fun QuranScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 WeekNavigator(
-                    weekLabel = weekLabel,
+                    weekLabel = stringResource(R.string.quran_week_label, weekNumber, weekYear),
                     onPrevious = viewModel::previousWeek,
                     onNext = viewModel::nextWeek
                 )
@@ -180,13 +183,13 @@ private fun QuranCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "$todayAyahs / $target ayahs today",
+                    text = stringResource(R.string.quran_target_progress, todayAyahs, target),
                     style = MaterialTheme.typography.labelSmall,
                     color = AppTheme.colors.textMuted
                 )
             } else {
                 Text(
-                    text = "$todayAyahs ayahs today",
+                    text = stringResource(R.string.quran_today_no_target, todayAyahs),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = AppTheme.colors.green
@@ -196,7 +199,7 @@ private fun QuranCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "LOG AYAHS READ",
+                text = stringResource(R.string.quran_log_section_title),
                 style = MaterialTheme.typography.labelSmall,
                 color = AppTheme.colors.textMuted
             )
@@ -205,8 +208,8 @@ private fun QuranCard(
                 OutlinedTextField(
                     value = ayahsText,
                     onValueChange = { if (it.all { c -> c.isDigit() }) onAyahsTextChange(it) },
-                    label = { Text("Ayahs") },
-                    placeholder = { Text("e.g. 20") },
+                    label = { Text(stringResource(R.string.quran_ayahs_label)) },
+                    placeholder = { Text(stringResource(R.string.quran_ayahs_placeholder)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
@@ -214,8 +217,8 @@ private fun QuranCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 DateField(
-                    label = "Date",
-                    valueText = if (isLogDateToday) "Today" else logDate.format(DateTimeFormatter.ofPattern("d MMM")),
+                    label = stringResource(R.string.common_date_label),
+                    valueText = if (isLogDateToday) stringResource(R.string.common_today) else logDate.format(DateTimeFormatter.ofPattern("d MMM")),
                     onClick = onChangeLogDate,
                     modifier = Modifier.weight(1f)
                 )
@@ -227,7 +230,7 @@ private fun QuranCard(
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Add")
+                Text(stringResource(R.string.common_add))
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -240,16 +243,16 @@ private fun QuranCard(
                     OutlinedTextField(
                         value = text,
                         onValueChange = { if (it.all { c -> c.isDigit() }) text = it },
-                        placeholder = { Text("e.g. 10") },
+                        placeholder = { Text(stringResource(R.string.common_target_placeholder)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = onCancelEditTarget) { Text("Cancel") }
+                    TextButton(onClick = onCancelEditTarget) { Text(stringResource(R.string.common_cancel)) }
                     TextButton(onClick = { onSaveTarget(text.toIntOrNull()) }) {
-                        Text("Save", color = AppTheme.colors.gold, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.common_save), color = AppTheme.colors.gold, fontWeight = FontWeight.Bold)
                     }
                 }
             } else {
@@ -257,7 +260,7 @@ private fun QuranCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (target != null && target > 0) {
                         Text(
-                            text = "Edit limit",
+                            text = stringResource(R.string.quran_edit_limit),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.gold,
@@ -265,7 +268,7 @@ private fun QuranCard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Clear",
+                            text = stringResource(R.string.common_clear),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.gold,
@@ -273,7 +276,7 @@ private fun QuranCard(
                         )
                     } else {
                         Text(
-                            text = "Set daily limit",
+                            text = stringResource(R.string.quran_set_limit),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.colors.gold,
@@ -299,7 +302,7 @@ private fun ModeDropdown(
             value = selectedMode.name,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Reading type") },
+            label = { Text(stringResource(R.string.quran_reading_type_label)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
             shape = RoundedCornerShape(10.dp)
@@ -336,7 +339,7 @@ private fun DateField(label: String, valueText: String, onClick: () -> Unit, mod
                 Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTheme.colors.textMuted)
                 Text(text = valueText, style = MaterialTheme.typography.bodyLarge, color = AppTheme.colors.text)
             }
-            Icon(Icons.Rounded.CalendarMonth, contentDescription = "Change date", tint = AppTheme.colors.gold)
+            Icon(Icons.Rounded.CalendarMonth, contentDescription = stringResource(R.string.common_change_date), tint = AppTheme.colors.gold)
         }
     }
 }
@@ -349,7 +352,7 @@ private fun WeekNavigator(weekLabel: String, onPrevious: () -> Unit, onNext: () 
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPrevious) {
-            Icon(Icons.Rounded.ChevronLeft, contentDescription = "Previous week", tint = AppTheme.colors.text)
+            Icon(Icons.Rounded.ChevronLeft, contentDescription = stringResource(R.string.quran_prev_week), tint = AppTheme.colors.text)
         }
         Text(
             text = weekLabel,
@@ -358,7 +361,7 @@ private fun WeekNavigator(weekLabel: String, onPrevious: () -> Unit, onNext: () 
             color = AppTheme.colors.text
         )
         IconButton(onClick = onNext) {
-            Icon(Icons.Rounded.ChevronRight, contentDescription = "Next week", tint = AppTheme.colors.text)
+            Icon(Icons.Rounded.ChevronRight, contentDescription = stringResource(R.string.quran_next_week), tint = AppTheme.colors.text)
         }
     }
 }
@@ -457,10 +460,10 @@ private fun DateOnlyPickerDialog(
                 datePickerState.selectedDateMillis?.let { millis ->
                     onPick(LocalDate.ofEpochDay(millis / 86_400_000L))
                 } ?: onDismiss()
-            }) { Text("OK") }
+            }) { Text(stringResource(R.string.common_ok)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     ) {
         DatePicker(state = datePickerState, showModeToggle = false)
@@ -491,8 +494,8 @@ private fun EditAyahsDialog(
                 OutlinedTextField(
                     value = text,
                     onValueChange = { if (it.all { c -> c.isDigit() }) text = it },
-                    label = { Text("Total ayahs for this day") },
-                    placeholder = { Text("e.g. 20") },
+                    label = { Text(stringResource(R.string.quran_edit_total_label)) },
+                    placeholder = { Text(stringResource(R.string.quran_ayahs_placeholder)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
@@ -504,11 +507,11 @@ private fun EditAyahsDialog(
                 onClick = { onSave(text.toIntOrNull() ?: 0) },
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen)
             ) {
-                Text("Save")
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

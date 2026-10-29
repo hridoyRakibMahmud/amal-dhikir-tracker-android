@@ -79,12 +79,11 @@ class QuranViewModel(
         _weekStart.value = _weekStart.value.minusWeeks(1)
     }
 
-    /** e.g. "Week 23 · 2026". ISO week numbering (Monday-first). */
-    val weekLabel: StateFlow<String> = _weekStart.map { start ->
-        val weekNumber = start.get(WeekFields.ISO.weekOfWeekBasedYear())
-        val weekYear = start.get(WeekFields.ISO.weekBasedYear())
-        "Week $weekNumber · $weekYear"
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    /** ISO week-of-year and week-based year (Monday-first) for the visible week. Formatted into "Week N · Y" at the UI layer, so it localizes. */
+    val weekNumber: StateFlow<Int> = _weekStart.map { it.get(WeekFields.ISO.weekOfWeekBasedYear()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
+    val weekYear: StateFlow<Int> = _weekStart.map { it.get(WeekFields.ISO.weekBasedYear()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
 
     /** The 7 days of the visible week (Monday first), oldest first, with ayahs read for the selected mode, zero-filled. */
     val weekDailyAyahs: StateFlow<List<Pair<LocalDate, Int>>> = combine(selectedMode, _weekStart) { mode, start -> mode to start }

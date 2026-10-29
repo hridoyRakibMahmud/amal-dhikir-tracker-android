@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
@@ -67,10 +68,10 @@ fun MainScreen(
                             icon = {
                                 Icon(
                                     imageVector = if (selected) screen.selectedIcon!! else screen.icon!!,
-                                    contentDescription = screen.label
+                                    contentDescription = screen.labelRes?.let { stringResource(it) }
                                 )
                             },
-                            label = { Text(screen.label!!, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal) },
+                            label = { Text(stringResource(screen.labelRes!!), fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal) },
                             selected = selected,
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = AppTheme.colors.onGreen,

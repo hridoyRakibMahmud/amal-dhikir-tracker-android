@@ -61,14 +61,19 @@ class CounterViewModel(
         unpersistedTaps = 0
     }
 
-    /** Adds a count logged outside the app — writes through immediately (session/today/total). */
-    fun addManual(amount: Int) {
+    /**
+     * Adds a count logged outside the app — writes through immediately. Defaults to today;
+     * pass an earlier date to log retroactively. Only touches the live session/today display
+     * when logging for today itself.
+     */
+    fun addManual(amount: Int, date: LocalDate = spiritualDate.value) {
         if (amount <= 0) return
+        if (date.isAfter(spiritualDate.value)) return
         viewModelScope.launch {
             repository.upsertDhikirLog(
-                DhikirLog(dhikirId = dhikirId, count = amount, date = spiritualDate.value)
+                DhikirLog(dhikirId = dhikirId, count = amount, date = date)
             )
-            _sessionCount.value += amount
+            if (date == spiritualDate.value) _sessionCount.value += amount
         }
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material3.*
@@ -25,13 +26,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
 import com.bindraft.amaldhikirtracker.ui.theme.NotoNaskhArabic
 import com.bindraft.amaldhikirtracker.ui.viewmodel.CounterViewModel
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun CounterScreen(
@@ -41,6 +47,7 @@ fun CounterScreen(
     val sessionCount by viewModel.sessionCount.collectAsState()
     val totalToday by viewModel.totalToday.collectAsState()
     val dhikir by viewModel.dhikir.collectAsState()
+    val spiritualDate by viewModel.spiritualDate.collectAsState()
     val haptic = LocalHapticFeedback.current
 
     var showManualAdd by remember { mutableStateOf(false) }
@@ -66,7 +73,7 @@ fun CounterScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.text)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back), tint = AppTheme.colors.text)
             }
             Spacer(modifier = Modifier.width(4.dp))
             Column {
@@ -96,7 +103,7 @@ fun CounterScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Today's total",
+                text = stringResource(R.string.counter_today_total),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.colors.textMuted
             )
@@ -150,10 +157,11 @@ fun CounterScreen(
 
             ManualAddSection(
                 expanded = showManualAdd,
+                maxDate = spiritualDate,
                 onExpand = { showManualAdd = true },
                 onCancel = { showManualAdd = false },
-                onAdd = { amount ->
-                    viewModel.addManual(amount)
+                onAdd = { amount, date ->
+                    viewModel.addManual(amount, date)
                     showManualAdd = false
                 }
             )
@@ -172,7 +180,7 @@ fun CounterScreen(
                 border = BorderStroke(1.dp, AppTheme.colors.border),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.text)
             ) {
-                Text("Reset Session")
+                Text(stringResource(R.string.counter_reset_session))
             }
             Button(
                 onClick = {
@@ -183,7 +191,7 @@ fun CounterScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen)
             ) {
-                Text("Complete")
+                Text(stringResource(R.string.counter_complete))
             }
         }
     }
@@ -205,20 +213,20 @@ private fun TargetSection(
                 OutlinedTextField(
                     value = text,
                     onValueChange = { if (it.all { c -> c.isDigit() }) text = it },
-                    placeholder = { Text("e.g. 100") },
+                    placeholder = { Text(stringResource(R.string.common_target_placeholder)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = onCancel) { Text("Cancel") }
+                TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
                 Button(
                     onClick = { onSave(text.toIntOrNull()) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Save")
+                    Text(stringResource(R.string.common_save))
                 }
             }
         }
@@ -236,7 +244,7 @@ private fun TargetSection(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "$todayCount / $target today",
+                    text = stringResource(R.string.target_progress_today, todayCount, target),
                     style = MaterialTheme.typography.labelSmall,
                     color = AppTheme.colors.textMuted,
                     modifier = Modifier.clickable { onStartEdit() }
@@ -251,7 +259,7 @@ private fun TargetSection(
                 shape = RoundedCornerShape(100.dp)
             ) {
                 Text(
-                    text = "Set a daily target",
+                    text = stringResource(R.string.counter_set_target),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.labelLarge,
                     color = AppTheme.colors.gold
@@ -264,9 +272,10 @@ private fun TargetSection(
 @Composable
 private fun ManualAddSection(
     expanded: Boolean,
+    maxDate: LocalDate,
     onExpand: () -> Unit,
     onCancel: () -> Unit,
-    onAdd: (Int) -> Unit
+    onAdd: (Int, LocalDate) -> Unit
 ) {
     if (!expanded) {
         Row(
@@ -281,13 +290,16 @@ private fun ManualAddSection(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Already counted some? Add manually",
+                text = stringResource(R.string.counter_manual_add_prompt),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.colors.textMuted
             )
         }
     } else {
         var text by remember { mutableStateOf("") }
+        var date by remember { mutableStateOf(maxDate) }
+        var showDatePicker by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -296,17 +308,17 @@ private fun ManualAddSection(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Add a count you already did outside the app",
+                    text = stringResource(R.string.counter_manual_add_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.colors.textMuted,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onCancel, modifier = Modifier.size(20.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Cancel", tint = AppTheme.colors.textMuted)
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.common_cancel), tint = AppTheme.colors.textMuted)
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.Top) {
                 OutlinedTextField(
                     value = text,
                     onValueChange = { if (it.all { c -> c.isDigit() }) text = it },
@@ -317,17 +329,89 @@ private fun ManualAddSection(
                     shape = RoundedCornerShape(12.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        val amount = text.toIntOrNull() ?: 0
-                        if (amount > 0) onAdd(amount) else onCancel()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Add")
-                }
+                DateField(
+                    label = stringResource(R.string.common_date_label),
+                    valueText = if (date == maxDate) stringResource(R.string.common_today) else date.format(DateTimeFormatter.ofPattern("d MMM")),
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = {
+                    val amount = text.toIntOrNull() ?: 0
+                    if (amount > 0) onAdd(amount, date) else onCancel()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.common_add))
             }
         }
+
+        if (showDatePicker) {
+            DateOnlyPickerDialog(
+                initialDate = date,
+                maxDate = maxDate,
+                onDismiss = { showDatePicker = false },
+                onPick = { picked -> date = picked; showDatePicker = false }
+            )
+        }
+    }
+}
+
+/** Styled like a text field, but the whole area (not just a small icon) is a tap target — opens the date picker. */
+@Composable
+private fun DateField(label: String, valueText: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        color = AppTheme.colors.background,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, AppTheme.colors.border)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = label, style = MaterialTheme.typography.labelSmall, color = AppTheme.colors.textMuted)
+                Text(text = valueText, style = MaterialTheme.typography.bodyMedium, color = AppTheme.colors.text)
+            }
+            Icon(Icons.Rounded.CalendarMonth, contentDescription = stringResource(R.string.common_change_date), tint = AppTheme.colors.gold, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateOnlyPickerDialog(
+    initialDate: LocalDate,
+    maxDate: LocalDate,
+    onDismiss: () -> Unit,
+    onPick: (LocalDate) -> Unit
+) {
+    val maxMillis = maxDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= maxMillis
+        }
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    onPick(LocalDate.ofEpochDay(millis / 86_400_000L))
+                } ?: onDismiss()
+            }) { Text(stringResource(R.string.common_ok)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    ) {
+        DatePicker(state = datePickerState, showModeToggle = false)
     }
 }

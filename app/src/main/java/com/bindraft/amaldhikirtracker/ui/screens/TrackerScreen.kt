@@ -23,8 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
@@ -58,7 +60,7 @@ fun TrackerScreen(
         }
 
         item {
-            SectionHeader(title = "SALAH · FARD")
+            SectionHeader(title = stringResource(R.string.tracker_section_fard))
         }
         item {
             SectionCard {
@@ -75,8 +77,8 @@ fun TrackerScreen(
 
         item {
             SectionHeader(
-                title = "NAFL · VOLUNTARY",
-                action = "+ Add",
+                title = stringResource(R.string.tracker_section_nafl),
+                action = stringResource(R.string.tracker_add_action),
                 onAction = { showAddNaflForm = !showAddNaflForm }
             )
         }
@@ -100,7 +102,7 @@ fun TrackerScreen(
         }
 
         item {
-            SectionHeader(title = "DHIKIR", action = "Manage", onAction = onNavigateToManageDhikirs)
+            SectionHeader(title = stringResource(R.string.tracker_section_dhikir), action = stringResource(R.string.tracker_manage_action), onAction = onNavigateToManageDhikirs)
         }
         items(allDhikirs.chunked(2)) { pair ->
             Row(
@@ -242,7 +244,7 @@ private fun FardRow(salat: SalatLog, onToggleFard: () -> Unit, onToggleSunnah: (
             if (salat.isCompleted) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
-                    contentDescription = "Completed",
+                    contentDescription = stringResource(R.string.common_completed),
                     tint = AppTheme.colors.onGreen,
                     modifier = Modifier.size(16.dp)
                 )
@@ -288,7 +290,7 @@ private fun SunnahChip(done: Boolean, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = "Sunnah",
+                text = stringResource(R.string.common_sunnah),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = if (done) AppTheme.colors.goldStrong else AppTheme.colors.textMuted
@@ -321,7 +323,7 @@ private fun NaflRow(salat: SalatLog, onToggle: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             if (salat.isCompleted) {
-                Icon(Icons.Rounded.Check, contentDescription = "Completed", tint = AppTheme.colors.onGreen, modifier = Modifier.size(16.dp))
+                Icon(Icons.Rounded.Check, contentDescription = stringResource(R.string.common_completed), tint = AppTheme.colors.onGreen, modifier = Modifier.size(16.dp))
             }
         }
         Spacer(modifier = Modifier.width(14.dp))
@@ -361,7 +363,7 @@ private fun AddNaflInlineForm(onSave: (String) -> Unit, onCancel: () -> Unit) {
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            placeholder = { Text("e.g. Witr") },
+            placeholder = { Text(stringResource(R.string.tracker_nafl_placeholder)) },
             singleLine = true,
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(12.dp)
@@ -372,7 +374,7 @@ private fun AddNaflInlineForm(onSave: (String) -> Unit, onCancel: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Save")
+            Text(stringResource(R.string.common_save))
         }
     }
 }

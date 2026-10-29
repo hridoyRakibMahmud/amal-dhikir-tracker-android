@@ -1,10 +1,10 @@
 package com.bindraft.amaldhikirtracker
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -13,7 +13,12 @@ import com.bindraft.amaldhikirtracker.data.local.ThemeMode
 import com.bindraft.amaldhikirtracker.ui.screens.MainScreen
 import com.bindraft.amaldhikirtracker.ui.theme.AmalDhikirTrackerTheme
 
-class MainActivity : ComponentActivity() {
+/**
+ * Extends AppCompatActivity (not plain ComponentActivity) specifically so
+ * AppCompatDelegate.setApplicationLocales() recreates this activity and applies the chosen
+ * app language — that auto-recreate hook only reliably fires for AppCompatActivity.
+ */
+class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         (application as AmalApplication).spiritualDay.onForeground()

@@ -18,8 +18,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.DhikirLog
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
@@ -50,14 +52,14 @@ fun HistoryScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = AppTheme.colors.text
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                 }
                 Text(
-                    text = "History",
+                    text = stringResource(R.string.nav_history),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = AppTheme.colors.text
@@ -80,12 +82,12 @@ fun HistoryScreen(
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Salah completion",
+                    label = stringResource(R.string.history_salah_completion),
                     value = "${(state.completionRate * 100).toInt()}%"
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Total Dhikir",
+                    label = stringResource(R.string.history_total_dhikir),
                     value = state.totalDhikirCount.toString(),
                     valueColor = AppTheme.colors.gold
                 )
@@ -93,21 +95,21 @@ fun HistoryScreen(
         }
 
         item {
-            SectionLabel("SALAH COMPLETED / DAY")
+            SectionLabel(stringResource(R.string.history_section_salah_chart))
             ChartCard {
                 SalatBarChart(state = state, daysCount = dateRange)
             }
         }
 
         item {
-            SectionLabel("DHIKIR LOGGED / DAY")
+            SectionLabel(stringResource(R.string.history_section_dhikir_chart))
             ChartCard {
                 DhikirBarChart(state = state, daysCount = dateRange)
             }
         }
 
         item {
-            SectionLabel("DETAILED ACTIVITY LOG")
+            SectionLabel(stringResource(R.string.history_section_activity_log))
         }
 
         val sortedDates = (state.salatLogs.keys + state.dhikirLogs.keys).distinct().sortedDescending()
@@ -115,7 +117,7 @@ fun HistoryScreen(
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        "No activity recorded yet.",
+                        stringResource(R.string.history_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = AppTheme.colors.textMuted
                     )
@@ -144,7 +146,7 @@ private fun DateRangeToggle(selectedDays: Int, onSelect: (Int) -> Unit, modifier
         modifier = modifier.fillMaxWidth()
     ) {
         Row(modifier = Modifier.padding(4.dp)) {
-            listOf(7 to "7 days", 30 to "30 days").forEach { (days, label) ->
+            listOf(7 to stringResource(R.string.history_7_days), 30 to stringResource(R.string.history_30_days)).forEach { (days, label) ->
                 val selected = selectedDays == days
                 Surface(
                     onClick = { onSelect(days) },
@@ -294,13 +296,13 @@ private fun HistoryLogItem(
             if (salats.isNotEmpty()) {
                 val completedCount = salats.count { it.isCompleted }
                 Text(
-                    text = "Salah: $completedCount/${salats.size} completed",
+                    text = stringResource(R.string.history_salah_summary, completedCount, salats.size),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.colors.textMuted
                 )
             }
             dhikirs.forEach { log ->
-                val name = dhikirMap[log.dhikirId]?.name ?: "Dhikir"
+                val name = dhikirMap[log.dhikirId]?.name ?: stringResource(R.string.common_dhikir_fallback)
                 Text(
                     text = "$name: ${log.count}",
                     style = MaterialTheme.typography.bodySmall,

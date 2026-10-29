@@ -22,9 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingType
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
@@ -63,10 +66,10 @@ fun FastingScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 12.dp)) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.text)
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back), tint = AppTheme.colors.text)
                 }
                 Text(
-                    text = "Nafl Fasting",
+                    text = stringResource(R.string.fasting_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = AppTheme.colors.text
@@ -81,7 +84,7 @@ fun FastingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { viewModel.previousMonth() }) {
-                    Icon(Icons.Rounded.ChevronLeft, contentDescription = "Previous month", tint = AppTheme.colors.text)
+                    Icon(Icons.Rounded.ChevronLeft, contentDescription = stringResource(R.string.fasting_prev_month), tint = AppTheme.colors.text)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
@@ -97,7 +100,7 @@ fun FastingScreen(
                     )
                 }
                 IconButton(onClick = { viewModel.nextMonth() }) {
-                    Icon(Icons.Rounded.ChevronRight, contentDescription = "Next month", tint = AppTheme.colors.text)
+                    Icon(Icons.Rounded.ChevronRight, contentDescription = stringResource(R.string.fasting_next_month), tint = AppTheme.colors.text)
                 }
             }
         }
@@ -117,7 +120,7 @@ fun FastingScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
-                        listOf("S", "M", "T", "W", "T", "F", "S").forEach { label ->
+                        stringArrayResource(R.array.calendar_weekday_initials).forEach { label ->
                             Text(
                                 text = label,
                                 modifier = Modifier.weight(1f),
@@ -161,7 +164,7 @@ fun FastingScreen(
 
         item {
             Text(
-                text = "STANDARD SUNNAH FASTS",
+                text = stringResource(R.string.fasting_section_standard),
                 style = MaterialTheme.typography.labelMedium,
                 color = AppTheme.colors.textMuted,
                 modifier = Modifier.padding(bottom = 10.dp)
@@ -272,21 +275,21 @@ private fun RamadanSummaryCard(summary: RamadanSummary, modifier: Modifier = Mod
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "Ramadan ${summary.hijriYear} AH — mandatory fasts",
+                text = stringResource(R.string.fasting_ramadan_title, summary.hijriYear),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.greenStrong
             )
             Spacer(modifier = Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                RamadanStat(label = "Fasted", value = summary.fasted, color = AppTheme.colors.greenStrong, modifier = Modifier.weight(1f))
+                RamadanStat(label = stringResource(R.string.common_fasted), value = summary.fasted, color = AppTheme.colors.greenStrong, modifier = Modifier.weight(1f))
                 RamadanStat(
-                    label = "Missed",
+                    label = stringResource(R.string.common_missed),
                     value = summary.missed,
                     color = if (summary.missed > 0) AppTheme.colors.danger else AppTheme.colors.textMuted,
                     modifier = Modifier.weight(1f)
                 )
-                RamadanStat(label = "Remaining", value = summary.remaining, color = AppTheme.colors.textMuted, modifier = Modifier.weight(1f))
+                RamadanStat(label = stringResource(R.string.common_remaining), value = summary.remaining, color = AppTheme.colors.textMuted, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -306,10 +309,10 @@ private fun LegendRow(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        LegendItem(color = AppTheme.colors.green, label = "Fasted")
-        LegendItem(color = AppTheme.colors.greenTint, borderColor = AppTheme.colors.green, label = "Ramadan")
-        LegendItem(color = AppTheme.colors.goldTint, borderColor = AppTheme.colors.gold, label = "Sunnah")
-        LegendItem(color = AppTheme.colors.dangerTint, label = "Forbidden")
+        LegendItem(color = AppTheme.colors.green, label = stringResource(R.string.common_fasted))
+        LegendItem(color = AppTheme.colors.greenTint, borderColor = AppTheme.colors.green, label = stringResource(R.string.common_ramadan))
+        LegendItem(color = AppTheme.colors.goldTint, borderColor = AppTheme.colors.gold, label = stringResource(R.string.common_sunnah))
+        LegendItem(color = AppTheme.colors.dangerTint, label = stringResource(R.string.common_forbidden))
     }
 }
 
@@ -374,7 +377,7 @@ private fun DashedAddFastingTypeButton(onClick: () -> Unit) {
         ) {
             Icon(Icons.Rounded.Add, contentDescription = null, tint = AppTheme.colors.textMuted)
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Add fasting type", style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textMuted)
+            Text(stringResource(R.string.fasting_add_type_button), style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textMuted)
         }
     }
 }
@@ -389,18 +392,19 @@ private fun FastingDayDialog(
     onRemove: () -> Unit
 ) {
     var selectedTypeId by remember { mutableStateOf<Long?>(existingLog?.fastingTypeId) }
+    val noSpecificReason = stringResource(R.string.fasting_no_specific_reason)
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (existingLog != null) "Fast logged" else "Log a fast") },
+        title = { Text(if (existingLog != null) stringResource(R.string.fasting_dialog_title_logged) else stringResource(R.string.fasting_dialog_title_log)) },
         text = {
             if (existingLog != null) {
-                val typeName = types.find { it.id == existingLog.fastingTypeId }?.name ?: "No specific reason"
-                Text("Reason: $typeName")
+                val typeName = types.find { it.id == existingLog.fastingTypeId }?.name ?: noSpecificReason
+                Text(stringResource(R.string.fasting_dialog_reason, typeName))
             } else {
                 Column {
-                    Text("Reason (optional)", style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textMuted)
+                    Text(stringResource(R.string.fasting_reason_optional_label), style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textMuted)
                     Spacer(modifier = Modifier.height(8.dp))
-                    TypeOptionRow(label = "No specific reason", selected = selectedTypeId == null) { selectedTypeId = null }
+                    TypeOptionRow(label = noSpecificReason, selected = selectedTypeId == null) { selectedTypeId = null }
                     types.forEach { type ->
                         TypeOptionRow(label = type.name, selected = selectedTypeId == type.id) { selectedTypeId = type.id }
                     }
@@ -410,19 +414,19 @@ private fun FastingDayDialog(
         confirmButton = {
             if (existingLog != null) {
                 TextButton(onClick = onRemove) {
-                    Text("Remove", color = AppTheme.colors.danger)
+                    Text(stringResource(R.string.common_remove), color = AppTheme.colors.danger)
                 }
             } else {
                 Button(
                     onClick = { onLog(selectedTypeId) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen)
                 ) {
-                    Text("Log Fast")
+                    Text(stringResource(R.string.fasting_log_fast_button))
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
@@ -456,11 +460,11 @@ private fun AddFastingTypeDialog(onDismiss: () -> Unit, onSave: (String, String?
     var arabic by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Fasting Type") },
+        title = { Text(stringResource(R.string.fasting_add_type_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = arabic, onValueChange = { arabic = it }, label = { Text("Arabic (Optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.common_name_label)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = arabic, onValueChange = { arabic = it }, label = { Text(stringResource(R.string.common_arabic_optional_label)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
@@ -468,11 +472,11 @@ private fun AddFastingTypeDialog(onDismiss: () -> Unit, onSave: (String, String?
                 onClick = { if (name.isNotBlank()) onSave(name, arabic.ifBlank { null }) },
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.green, contentColor = AppTheme.colors.onGreen)
             ) {
-                Text("Save")
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
