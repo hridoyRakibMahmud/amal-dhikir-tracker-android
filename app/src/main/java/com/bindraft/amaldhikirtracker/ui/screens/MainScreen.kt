@@ -29,6 +29,7 @@ import androidx.navigation.navArgument
 import com.bindraft.amaldhikirtracker.ui.viewmodel.CounterViewModel
 import com.bindraft.amaldhikirtracker.ui.viewmodel.FastingViewModel
 import com.bindraft.amaldhikirtracker.ui.viewmodel.HistoryViewModel
+import com.bindraft.amaldhikirtracker.ui.viewmodel.QuranViewModel
 import com.bindraft.amaldhikirtracker.ui.viewmodel.TrackerViewModel
 
 @Composable
@@ -153,6 +154,9 @@ fun MainScreen(
                         onNavigateToFasting = {
                             navController.navigate(Screen.Fasting.route)
                         },
+                        onNavigateToQuran = {
+                            navController.navigate(Screen.Quran.route)
+                        },
                         onNavigateToLogin = {
                             navController.navigate(Screen.Login.route)
                         }
@@ -169,6 +173,20 @@ fun MainScreen(
                     )
                     FastingScreen(
                         viewModel = fastingViewModel,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable(Screen.Quran.route) {
+                    val quranViewModel: QuranViewModel = viewModel(
+                        factory = QuranViewModel.Factory(
+                            application.repository,
+                            application.preferencesManager,
+                            application.locationTracker,
+                            application.spiritualDay
+                        )
+                    )
+                    QuranScreen(
+                        viewModel = quranViewModel,
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }

@@ -6,10 +6,10 @@ service cloud.firestore {
     // Each user can only read and write their own subtree.
     match /users/{uid}/{collection}/{syncId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid
-        && collection in ['dhikirs', 'dhikirLogs', 'salatLogs', 'fastingTypes', 'fastingLogs'];
+        && collection in ['dhikirs', 'dhikirLogs', 'salatLogs', 'fastingTypes', 'fastingLogs', 'quranModes', 'quranLogs'];
 
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && collection in ['dhikirs', 'dhikirLogs', 'salatLogs', 'fastingTypes', 'fastingLogs']
+        && collection in ['dhikirs', 'dhikirLogs', 'salatLogs', 'fastingTypes', 'fastingLogs', 'quranModes', 'quranLogs']
         && request.resource.data.updatedAt is number
         && request.resource.data.updatedAt >= 0;
     }

@@ -5,6 +5,8 @@ import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.DhikirLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingType
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranLog
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranMode
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.data.sync.SyncManager
 import kotlinx.coroutines.flow.Flow
@@ -133,4 +135,51 @@ class AmalRepository(
 
     fun getFastingLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<FastingLog>> =
         amalDao.getFastingLogsInRange(startDate, endDate)
+
+    private suspend fun quranLogSyncId(quranModeId: Long, date: LocalDate): String =
+        "${amalDao.getQuranModeById(quranModeId)?.syncId ?: quranModeId}_$date"
+
+    fun getAllQuranModes(): Flow<List<QuranMode>> =
+        amalDao.getAllQuranModes()
+
+    suspend fun insertQuranMode(quranMode: QuranMode): Long {
+        val stamped = quranMode.copy(updatedAt = now())
+        val id = amalDao.insertQuranMode(stamped)
+        syncManager.pushQuranMode(stamped.copy(id = id))
+        return id
+    }
+
+    suspend fun setQuranModeTarget(quranModeId: Long, dailyTarget: Int?) {
+        amalDao.setQuranModeTarget(quranModeId, dailyTarget, now())
+        amalDao.getQuranModeById(quranModeId)?.let { syncManager.pushQuranMode(it) }
+    }
+
+    fun getQuranLogsByDate(date: LocalDate): Flow<List<QuranLog>> =
+        amalDao.getQuranLogsByDate(date)
+
+    suspend fun upsertQuranLog(quranLog: QuranLog) {
+        amalDao.upsertQuranLog(
+            quranLog.copy(syncId = quranLogSyncId(quranLog.quranModeId, quranLog.date))
+        )
+        amalDao.getQuranLog(quranLog.quranModeId, quranLog.date)?.let { syncManager.pushQuranLog(it) }
+    }
+
+    fun getQuranLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<QuranLog>> =
+        amalDao.getQuranLogsInRange(startDate, endDate)
+
+    /** Overwrites (not adds to) a day's total — used when editing an already-logged day. Zero clears it. */
+    suspend fun setQuranLog(quranModeId: Long, date: LocalDate, ayahsRead: Int) {
+        val existing = amalDao.getQuranLog(quranModeId, date)
+        if (ayahsRead <= 0) {
+            existing?.let {
+                amalDao.deleteQuranLog(it)
+                syncManager.deleteRemote("quranLogs", it.syncId)
+            }
+            return
+        }
+        val stamped = (existing ?: QuranLog(quranModeId = quranModeId, ayahsRead = 0, date = date))
+            .copy(ayahsRead = ayahsRead, syncId = quranLogSyncId(quranModeId, date), updatedAt = now())
+        amalDao.insertQuranLog(stamped)
+        syncManager.pushQuranLog(stamped)
+    }
 }

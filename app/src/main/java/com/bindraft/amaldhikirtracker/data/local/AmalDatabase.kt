@@ -11,11 +11,13 @@ import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.DhikirLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingType
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranLog
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranMode
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 
 @Database(
-    entities = [SalatLog::class, Dhikir::class, DhikirLog::class, FastingType::class, FastingLog::class],
-    version = 5,
+    entities = [SalatLog::class, Dhikir::class, DhikirLog::class, FastingType::class, FastingLog::class, QuranMode::class, QuranLog::class],
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(DateConverters::class)

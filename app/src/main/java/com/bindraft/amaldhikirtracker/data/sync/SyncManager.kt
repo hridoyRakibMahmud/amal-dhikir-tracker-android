@@ -5,6 +5,8 @@ import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.DhikirLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingType
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranLog
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranMode
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.util.awaitResult
 import android.util.Log
@@ -47,7 +49,7 @@ class SyncManager(private val dao: AmalDao) {
     private var activeUid: String? = null
 
     // Parents before children, so foreign-key references resolve during pull.
-    private val collections = listOf("fastingTypes", "dhikirs", "salatLogs", "dhikirLogs", "fastingLogs")
+    private val collections = listOf("fastingTypes", "dhikirs", "quranModes", "salatLogs", "dhikirLogs", "fastingLogs", "quranLogs")
 
     fun attach() {
         FirebaseAuth.getInstance().addAuthStateListener { auth ->
@@ -128,6 +130,23 @@ class SyncManager(private val dao: AmalDao) {
         ))
     }
 
+    fun pushQuranMode(mode: QuranMode) = write("quranModes", mode.syncId, mapOf(
+        "name" to mode.name,
+        "isCustom" to mode.isCustom,
+        "dailyTarget" to mode.dailyTarget,
+        "updatedAt" to mode.updatedAt
+    ))
+
+    fun pushQuranLog(log: QuranLog) = scope.launch {
+        val modeSyncId = dao.getQuranModeById(log.quranModeId)?.syncId ?: return@launch
+        write("quranLogs", log.syncId, mapOf(
+            "quranModeSyncId" to modeSyncId,
+            "ayahsRead" to log.ayahsRead,
+            "date" to log.date.toString(),
+            "updatedAt" to log.updatedAt
+        ))
+    }
+
     fun deleteRemote(collection: String, syncId: String) {
         val uid = activeUid ?: return
         userRoot(uid).collection(collection).document(syncId).delete()
@@ -144,9 +163,11 @@ class SyncManager(private val dao: AmalDao) {
     private suspend fun pushAll() {
         dao.getAllFastingTypes().first().forEach { pushFastingType(it) }
         dao.getAllDhikirs().first().forEach { pushDhikir(it) }
+        dao.getAllQuranModes().first().forEach { pushQuranMode(it) }
         dao.getAllSalatLogsOnce().forEach { pushSalatLog(it) }
         dao.getAllDhikirLogsOnce().forEach { pushDhikirLog(it) }
         dao.getAllFastingLogsOnce().forEach { pushFastingLog(it) }
+        dao.getAllQuranLogsOnce().forEach { pushQuranLog(it) }
     }
 
     // ---- Pull / listen (applied straight to the DAO, last-write-wins) ----
@@ -183,6 +204,8 @@ class SyncManager(private val dao: AmalDao) {
             "salatLogs" -> applySalatLog(doc)
             "dhikirLogs" -> applyDhikirLog(doc)
             "fastingLogs" -> applyFastingLog(doc)
+            "quranModes" -> applyQuranMode(doc)
+            "quranLogs" -> applyQuranLog(doc)
         }
     }
 
@@ -263,6 +286,35 @@ class SyncManager(private val dao: AmalDao) {
         ))
     }
 
+    private suspend fun applyQuranMode(doc: DocumentSnapshot) {
+        val remoteUpdatedAt = doc.getLong("updatedAt") ?: 0L
+        val local = dao.getQuranModeBySyncId(doc.id)
+        if (local != null && local.updatedAt >= remoteUpdatedAt) return
+        dao.insertQuranMode(QuranMode(
+            id = local?.id ?: 0,
+            syncId = doc.id,
+            name = doc.getString("name") ?: return,
+            isCustom = doc.getBoolean("isCustom") ?: false,
+            dailyTarget = doc.getLong("dailyTarget")?.toInt(),
+            updatedAt = remoteUpdatedAt
+        ))
+    }
+
+    private suspend fun applyQuranLog(doc: DocumentSnapshot) {
+        val remoteUpdatedAt = doc.getLong("updatedAt") ?: 0L
+        val local = dao.getQuranLogBySyncId(doc.id)
+        if (local != null && local.updatedAt >= remoteUpdatedAt) return
+        val modeId = dao.getQuranModeBySyncId(doc.getString("quranModeSyncId") ?: return)?.id ?: return
+        dao.insertQuranLog(QuranLog(
+            id = local?.id ?: 0,
+            syncId = doc.id,
+            quranModeId = modeId,
+            ayahsRead = doc.getLong("ayahsRead")?.toInt() ?: 0,
+            date = LocalDate.parse(doc.getString("date") ?: return),
+            updatedAt = remoteUpdatedAt
+        ))
+    }
+
     private suspend fun removeLocal(collection: String, syncId: String) {
         when (collection) {
             "dhikirs" -> dao.getDhikirBySyncId(syncId)?.let { dao.deleteDhikir(it) }
@@ -270,6 +322,7 @@ class SyncManager(private val dao: AmalDao) {
             "salatLogs" -> dao.getSalatLogBySyncId(syncId)?.let { dao.deleteSalatLog(it) }
             "fastingTypes" -> dao.getFastingTypeBySyncId(syncId)?.let { dao.deleteFastingType(it) }
             "fastingLogs" -> dao.getFastingLogBySyncId(syncId)?.let { dao.deleteFastingLog(it) }
+            "quranLogs" -> dao.getQuranLogBySyncId(syncId)?.let { dao.deleteQuranLog(it) }
         }
     }
 

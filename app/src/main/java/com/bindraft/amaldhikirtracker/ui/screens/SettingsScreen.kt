@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.List
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.DarkMode
@@ -37,6 +38,7 @@ fun SettingsScreen(
     preferencesManager: PreferencesManager,
     onNavigateToManageDhikirs: () -> Unit,
     onNavigateToFasting: () -> Unit,
+    onNavigateToQuran: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val calendarType by preferencesManager.calendarType.collectAsState(initial = CalendarType.HIJRI)
@@ -184,6 +186,13 @@ fun SettingsScreen(
                     subtitle = "Track your fasting days",
                     icon = Icons.Rounded.CalendarMonth,
                     onClick = onNavigateToFasting
+                )
+                HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
+                SettingsMenuItem(
+                    title = "Quran Reading",
+                    subtitle = "Track daily ayahs read",
+                    icon = Icons.AutoMirrored.Rounded.MenuBook,
+                    onClick = onNavigateToQuran
                 )
             }
         }

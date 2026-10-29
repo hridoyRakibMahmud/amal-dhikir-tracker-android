@@ -5,6 +5,8 @@ import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
 import com.bindraft.amaldhikirtracker.data.local.entities.DhikirLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingLog
 import com.bindraft.amaldhikirtracker.data.local.entities.FastingType
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranLog
+import com.bindraft.amaldhikirtracker.data.local.entities.QuranMode
 import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -130,4 +132,54 @@ interface AmalDao {
 
     @Query("SELECT * FROM fasting_logs WHERE fastingTypeId = :typeId")
     suspend fun getFastingLogsForType(typeId: Long): List<FastingLog>
+
+    // Quran Modes
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertQuranMode(quranMode: QuranMode): Long
+
+    @Query("SELECT * FROM quran_modes")
+    fun getAllQuranModes(): Flow<List<QuranMode>>
+
+    @Query("SELECT * FROM quran_modes WHERE id = :id")
+    suspend fun getQuranModeById(id: Long): QuranMode?
+
+    @Query("UPDATE quran_modes SET dailyTarget = :dailyTarget, updatedAt = :updatedAt WHERE id = :quranModeId")
+    suspend fun setQuranModeTarget(quranModeId: Long, dailyTarget: Int?, updatedAt: Long)
+
+    // Quran Logs
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertQuranLog(quranLog: QuranLog)
+
+    @Query("SELECT * FROM quran_logs WHERE date = :date")
+    fun getQuranLogsByDate(date: LocalDate): Flow<List<QuranLog>>
+
+    @Query("SELECT * FROM quran_logs WHERE quranModeId = :quranModeId AND date = :date")
+    suspend fun getQuranLog(quranModeId: Long, date: LocalDate): QuranLog?
+
+    @Query("SELECT * FROM quran_logs WHERE date BETWEEN :startDate AND :endDate")
+    fun getQuranLogsInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<QuranLog>>
+
+    @Transaction
+    suspend fun upsertQuranLog(quranLog: QuranLog) {
+        val now = System.currentTimeMillis()
+        val existing = getQuranLog(quranLog.quranModeId, quranLog.date)
+        if (existing == null) {
+            insertQuranLog(quranLog.copy(updatedAt = now))
+        } else {
+            insertQuranLog(existing.copy(ayahsRead = existing.ayahsRead + quranLog.ayahsRead, updatedAt = now))
+        }
+    }
+
+    // Sync lookups
+    @Query("SELECT * FROM quran_modes WHERE syncId = :syncId LIMIT 1")
+    suspend fun getQuranModeBySyncId(syncId: String): QuranMode?
+
+    @Query("SELECT * FROM quran_logs WHERE syncId = :syncId LIMIT 1")
+    suspend fun getQuranLogBySyncId(syncId: String): QuranLog?
+
+    @Query("SELECT * FROM quran_logs")
+    suspend fun getAllQuranLogsOnce(): List<QuranLog>
+
+    @Delete
+    suspend fun deleteQuranLog(quranLog: QuranLog)
 }

@@ -46,6 +46,8 @@ sealed class Screen(
 
     object Fasting : Screen("fasting")
 
+    object Quran : Screen("quran")
+
     companion object {
         val bottomNavItems = listOf(Tracker, History, Settings)
     }

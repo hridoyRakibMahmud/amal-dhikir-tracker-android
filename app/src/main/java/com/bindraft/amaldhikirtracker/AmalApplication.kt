@@ -3,6 +3,7 @@ package com.bindraft.amaldhikirtracker
 import android.app.Application
 import com.bindraft.amaldhikirtracker.data.DefaultDhikirSeeder
 import com.bindraft.amaldhikirtracker.data.DefaultFastingTypeSeeder
+import com.bindraft.amaldhikirtracker.data.DefaultQuranModeSeeder
 import com.bindraft.amaldhikirtracker.data.local.AmalDatabase
 import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
@@ -30,6 +31,7 @@ class AmalApplication : Application() {
         appScope.launch {
             DefaultDhikirSeeder(repository, preferencesManager).seed()
             DefaultFastingTypeSeeder(repository, preferencesManager).seed()
+            DefaultQuranModeSeeder(repository, preferencesManager).seed()
         }
     }
 }
