@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "244474017511-6nfcsnbs7m6stvapee1i1f5j4i4apacl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bindraft.amaldhikirtracker",
+            "certificate_hash": "1c61ba1ac0f18adca068f00747378285cde2984a"
+          }
+        },
+        {
+          "client_id": "244474017511-9fr91a0co9brcmpntrj911sk6s2ijnor.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bindraft.amaldhikirtracker",
+            "certificate_hash": "c203317b5f0d32fc03ed95207badc0d4ff9482e1"
+          }
+        },
+        {
           "client_id": "244474017511-bs2b14obvs7p879e90ge1mks000aiuq0.apps.googleusercontent.com",
           "client_type": 3
         }
