@@ -18,7 +18,7 @@ import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 @Database(
     entities = [SalatLog::class, Dhikir::class, DhikirLog::class, FastingType::class, FastingLog::class, QuranMode::class, QuranLog::class],
     version = 6,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(DateConverters::class)
 abstract class AmalDatabase : RoomDatabase() {
@@ -28,10 +28,13 @@ abstract class AmalDatabase : RoomDatabase() {
         @Volatile
         private var Instance: AmalDatabase? = null
 
+        // No migrations exist yet because the schema hasn't changed since exportSchema was
+        // turned on. The next version bump MUST ship a real Migration added below via
+        // .addMigrations(...) — without one, Room throws instead of silently wiping user data,
+        // which is the point: a loud crash in testing beats a silent data loss in production.
         fun getDatabase(context: Context): AmalDatabase {
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, AmalDatabase::class.java, "amal_database")
-                    .fallbackToDestructiveMigration()
                     .build()
                     .also { Instance = it }
             }
