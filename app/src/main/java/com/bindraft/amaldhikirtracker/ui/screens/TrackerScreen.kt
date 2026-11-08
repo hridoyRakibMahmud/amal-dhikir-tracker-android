@@ -42,7 +42,9 @@ import java.time.format.DateTimeFormatter
 fun TrackerScreen(
     viewModel: TrackerViewModel,
     onNavigateToCounter: (Long) -> Unit,
-    onNavigateToManageDhikirs: () -> Unit
+    onNavigateToManageDhikirs: () -> Unit,
+    showDhikirReminderPopup: Boolean = false,
+    onDhikirReminderPopupShown: () -> Unit = {}
 ) {
     val fardSalats by viewModel.fardSalatLogs.collectAsState()
     val naflSalats by viewModel.naflSalatLogs.collectAsState()
@@ -57,8 +59,18 @@ fun TrackerScreen(
     val spiritualDate by viewModel.spiritualDate.collectAsState()
     val isViewingToday by viewModel.isViewingToday.collectAsState()
 
+    val dhikirsWithRemainingTarget by viewModel.dhikirsWithRemainingTarget.collectAsState()
+
     var showAddNaflForm by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showDhikirPopup by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showDhikirReminderPopup) {
+        if (showDhikirReminderPopup) {
+            showDhikirPopup = true
+            onDhikirReminderPopupShown()
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -180,6 +192,58 @@ fun TrackerScreen(
             onPick = { picked -> viewModel.selectDate(picked); showDatePicker = false }
         )
     }
+
+    if (showDhikirPopup) {
+        DhikirReminderPopup(
+            remaining = dhikirsWithRemainingTarget,
+            onDismiss = { showDhikirPopup = false },
+            onDhikirClick = { dhikirId ->
+                showDhikirPopup = false
+                onNavigateToCounter(dhikirId)
+            }
+        )
+    }
+}
+
+@Composable
+private fun DhikirReminderPopup(
+    remaining: List<Pair<Dhikir, Int>>,
+    onDismiss: () -> Unit,
+    onDhikirClick: (Long) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
+        },
+        title = { Text(stringResource(R.string.reminder_popup_title)) },
+        text = {
+            if (remaining.isEmpty()) {
+                Text(stringResource(R.string.reminder_popup_empty))
+            } else {
+                Column {
+                    remaining.forEachIndexed { index, (dhikir, left) ->
+                        if (index > 0) RowDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onDhikirClick(dhikir.id) }
+                                .padding(vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(dhikir.name, color = AppTheme.colors.text)
+                            Text(
+                                stringResource(R.string.reminder_popup_remaining, left),
+                                color = AppTheme.colors.green,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable

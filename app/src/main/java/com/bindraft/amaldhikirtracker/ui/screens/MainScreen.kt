@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +39,9 @@ import com.bindraft.amaldhikirtracker.ui.viewmodel.TrackerViewModel
 
 @Composable
 fun MainScreen(
-    application: AmalApplication
+    application: AmalApplication,
+    pendingReminderType: String? = null,
+    onConsumePendingReminder: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val trackerViewModel: TrackerViewModel = viewModel(
@@ -46,6 +52,22 @@ fun MainScreen(
             application.spiritualDay
         )
     )
+
+    var dhikirReminderPopupRequested by remember { mutableStateOf(false) }
+
+    LaunchedEffect(pendingReminderType) {
+        when (pendingReminderType) {
+            "dhikir" -> {
+                navController.navigate(Screen.Tracker.route) {
+                    popUpTo(navController.graph.findStartDestination().id)
+                    launchSingleTop = true
+                }
+                dhikirReminderPopupRequested = true
+            }
+            "quran" -> navController.navigate(Screen.Quran.route)
+        }
+        if (pendingReminderType != null) onConsumePendingReminder()
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -109,7 +131,9 @@ fun MainScreen(
                         },
                         onNavigateToManageDhikirs = {
                             navController.navigate(Screen.ManageDhikirs.route)
-                        }
+                        },
+                        showDhikirReminderPopup = dhikirReminderPopupRequested,
+                        onDhikirReminderPopupShown = { dhikirReminderPopupRequested = false }
                     )
                 }
                 composable(
@@ -158,9 +182,18 @@ fun MainScreen(
                         onNavigateToQuran = {
                             navController.navigate(Screen.Quran.route)
                         },
+                        onNavigateToReminders = {
+                            navController.navigate(Screen.Reminders.route)
+                        },
                         onNavigateToLogin = {
                             navController.navigate(Screen.Login.route)
                         }
+                    )
+                }
+                composable(Screen.Reminders.route) {
+                    RemindersScreen(
+                        preferencesManager = application.preferencesManager,
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
                 composable(Screen.Fasting.route) {

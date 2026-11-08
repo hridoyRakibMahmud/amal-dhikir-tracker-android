@@ -1,5 +1,7 @@
 package com.bindraft.amaldhikirtracker
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,7 +11,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import com.bindraft.amaldhikirtracker.data.local.ThemeMode
+import com.bindraft.amaldhikirtracker.reminder.ReminderScheduler
 import com.bindraft.amaldhikirtracker.ui.screens.MainScreen
 import com.bindraft.amaldhikirtracker.ui.theme.AmalDhikirTrackerTheme
 
@@ -19,6 +23,8 @@ import com.bindraft.amaldhikirtracker.ui.theme.AmalDhikirTrackerTheme
  * app language — that auto-recreate hook only reliably fires for AppCompatActivity.
  */
 class MainActivity : AppCompatActivity() {
+    private val pendingReminderTypeState = mutableStateOf<String?>(null)
+
     override fun onStart() {
         super.onStart()
         (application as AmalApplication).spiritualDay.onForeground()
@@ -36,19 +42,36 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
-        requestPermissionLauncher.launch(arrayOf(
+
+        val permissions = mutableListOf(
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION
-        ))
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions += android.Manifest.permission.POST_NOTIFICATIONS
+        }
+        requestPermissionLauncher.launch(permissions.toTypedArray())
+
+        pendingReminderTypeState.value = intent?.getStringExtra(ReminderScheduler.EXTRA_REMINDER_TYPE)
 
         val application = applicationContext as AmalApplication
         setContent {
             val themeMode by application.preferencesManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+            val pendingReminderType by pendingReminderTypeState
             AmalDhikirTrackerTheme(darkTheme = resolveDarkTheme(themeMode)) {
-                MainScreen(application = application)
+                MainScreen(
+                    application = application,
+                    pendingReminderType = pendingReminderType,
+                    onConsumePendingReminder = { pendingReminderTypeState.value = null }
+                )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingReminderTypeState.value = intent.getStringExtra(ReminderScheduler.EXTRA_REMINDER_TYPE)
     }
 }
 

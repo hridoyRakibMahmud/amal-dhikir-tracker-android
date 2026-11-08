@@ -9,6 +9,7 @@ import com.bindraft.amaldhikirtracker.data.local.PreferencesManager
 import com.bindraft.amaldhikirtracker.data.local.applyAppLanguage
 import com.bindraft.amaldhikirtracker.data.repository.AmalRepository
 import com.bindraft.amaldhikirtracker.data.sync.SyncManager
+import com.bindraft.amaldhikirtracker.reminder.ReminderNotifications
 import com.bindraft.amaldhikirtracker.util.LocationTracker
 import com.bindraft.amaldhikirtracker.util.SpiritualDayProvider
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +30,7 @@ class AmalApplication : Application() {
         super.onCreate()
         syncManager.attach()
         spiritualDay.start()
+        ReminderNotifications.ensureChannels(this)
         appScope.launch {
             applyAppLanguage(preferencesManager.getAppLanguage())
             DefaultDhikirSeeder(repository, preferencesManager).seed()

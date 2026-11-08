@@ -50,6 +50,8 @@ sealed class Screen(
 
     object Quran : Screen("quran")
 
+    object Reminders : Screen("reminders")
+
     companion object {
         val bottomNavItems = listOf(Tracker, History, Settings)
     }

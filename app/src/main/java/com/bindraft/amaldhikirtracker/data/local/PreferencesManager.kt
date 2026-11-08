@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -34,6 +35,31 @@ fun applyAppLanguage(language: AppLanguage) {
 }
 
 data class AuthProfile(val displayName: String, val email: String?, val photoUrl: String?)
+
+/**
+ * A reminder has one daily start time; from then on it re-checks hourly until that day's
+ * quota is met (see [com.bindraft.amaldhikirtracker.reminder.ReminderScheduler]).
+ * [startMinutes] is minutes since midnight, local time.
+ */
+data class ReminderSettings(
+    val enabled: Boolean = false,
+    val startMinutes: Int = 8 * 60
+)
+
+private data class ReminderKeys(
+    val enabled: Preferences.Key<Boolean>,
+    val start: Preferences.Key<Int>
+)
+
+private fun reminderKeys(prefix: String) = ReminderKeys(
+    enabled = booleanPreferencesKey("${prefix}_reminder_enabled"),
+    start = intPreferencesKey("${prefix}_reminder_start")
+)
+
+private fun readReminderSettings(preferences: Preferences, keys: ReminderKeys): ReminderSettings = ReminderSettings(
+    enabled = preferences[keys.enabled] ?: false,
+    startMinutes = preferences[keys.start] ?: 8 * 60
+)
 
 class PreferencesManager(private val context: Context) {
     private val calendarTypeKey = stringPreferencesKey("calendar_type")
@@ -161,6 +187,34 @@ class PreferencesManager(private val context: Context) {
     suspend fun setDefaultQuranModeSeedVersion(version: Int) {
         context.dataStore.edit { preferences ->
             preferences[defaultQuranModeSeedVersionKey] = version
+        }
+    }
+
+    private val dhikirReminderKeys = reminderKeys("dhikir")
+    private val quranReminderKeys = reminderKeys("quran")
+
+    val dhikirReminderSettings: Flow<ReminderSettings> = context.dataStore.data
+        .map { preferences -> readReminderSettings(preferences, dhikirReminderKeys) }
+
+    val quranReminderSettings: Flow<ReminderSettings> = context.dataStore.data
+        .map { preferences -> readReminderSettings(preferences, quranReminderKeys) }
+
+    suspend fun getDhikirReminderSettings(): ReminderSettings =
+        readReminderSettings(context.dataStore.data.first(), dhikirReminderKeys)
+
+    suspend fun getQuranReminderSettings(): ReminderSettings =
+        readReminderSettings(context.dataStore.data.first(), quranReminderKeys)
+
+    suspend fun setDhikirReminderSettings(settings: ReminderSettings) =
+        writeReminderSettings(dhikirReminderKeys, settings)
+
+    suspend fun setQuranReminderSettings(settings: ReminderSettings) =
+        writeReminderSettings(quranReminderKeys, settings)
+
+    private suspend fun writeReminderSettings(keys: ReminderKeys, settings: ReminderSettings) {
+        context.dataStore.edit { preferences ->
+            preferences[keys.enabled] = settings.enabled
+            preferences[keys.start] = settings.startMinutes
         }
     }
 }

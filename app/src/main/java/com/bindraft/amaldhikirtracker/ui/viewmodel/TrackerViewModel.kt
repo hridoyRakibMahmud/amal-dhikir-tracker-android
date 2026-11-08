@@ -105,6 +105,16 @@ class TrackerViewModel(
         .map { dhikirs -> dhikirs.find { it.name.equals("Durud", ignoreCase = true) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    /** Dhikirs with a daily target that hasn't been reached yet today, paired with the count still needed. Backs the Dhikir reminder's popup. */
+    val dhikirsWithRemainingTarget: StateFlow<List<Pair<Dhikir, Int>>> = combine(allDhikirs, todayDhikirLogs) { dhikirs, logs ->
+        dhikirs.mapNotNull { dhikir ->
+            val target = dhikir.dailyTarget ?: return@mapNotNull null
+            val done = logs.filter { it.dhikirId == dhikir.id }.sumOf { it.count }
+            val remaining = target - done
+            if (remaining > 0) dhikir to remaining else null
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val fardSalatLogs: StateFlow<List<SalatLog>> = viewedSalatLogs
         .map { logs -> logs.filter { it.type == "FARD" } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

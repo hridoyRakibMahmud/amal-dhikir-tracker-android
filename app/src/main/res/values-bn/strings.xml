@@ -66,6 +66,8 @@
     <string name="settings_fasting_subtitle">আপনার রোজার দিনগুলো ট্র্যাক করুন</string>
     <string name="settings_quran_title">কুরআন তিলাওয়াত</string>
     <string name="settings_quran_subtitle">দৈনিক পড়া আয়াত ট্র্যাক করুন</string>
+    <string name="settings_reminders_title">রিমাইন্ডার</string>
+    <string name="settings_reminders_subtitle">যিকর ও কুরআন তিলাওয়াতের নোটিফিকেশন</string>
     <string name="settings_section_about">সম্পর্কে</string>
     <string name="settings_app_version">অ্যাপ ভার্সন</string>
 
@@ -133,6 +135,22 @@
     <string name="history_salah_summary">সালাত: %1$d/%2$d সম্পন্ন</string>
     <string name="history_dhikir_all">সব</string>
     <string name="history_dhikir_filter_label">যিকর</string>
+
+    <!-- Reminders -->
+    <string name="reminders_section_dhikir">যিকর রিমাইন্ডার</string>
+    <string name="reminders_section_quran">কুরআন তিলাওয়াত রিমাইন্ডার</string>
+    <string name="reminders_enable_label">সক্রিয়</string>
+    <string name="reminders_start_time">শুরুর সময়</string>
+    <string name="reminders_hourly_note">এই সময় থেকে প্রতি ঘণ্টায় পরীক্ষা করবে, যতক্ষণ না আজকের লক্ষ্য পূর্ণ হয়।</string>
+    <string name="reminder_dhikir_channel_name">যিকর রিমাইন্ডার</string>
+    <string name="reminder_quran_channel_name">কুরআন তিলাওয়াত রিমাইন্ডার</string>
+    <string name="reminder_dhikir_notification_title">যিকর রিমাইন্ডার</string>
+    <string name="reminder_dhikir_notification_text">আজ কোন যিকরগুলো এখনো বাকি আছে দেখতে ট্যাপ করুন।</string>
+    <string name="reminder_quran_notification_title">কুরআন তিলাওয়াত রিমাইন্ডার</string>
+    <string name="reminder_quran_notification_text">আজকের কুরআন তিলাওয়াতের লক্ষ্য এখনো পূর্ণ হয়নি।</string>
+    <string name="reminder_popup_title">আজকের বাকি যিকর</string>
+    <string name="reminder_popup_empty">আজকের সব লক্ষ্য সম্পন্ন হয়েছে!</string>
+    <string name="reminder_popup_remaining">%1$d বাকি</string>
 
     <!-- Login -->
     <string name="login_signed_in_as">সাইন ইন করা আছে</string>

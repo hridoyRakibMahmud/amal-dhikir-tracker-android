@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.*
@@ -43,6 +44,7 @@ fun SettingsScreen(
     onNavigateToManageDhikirs: () -> Unit,
     onNavigateToFasting: () -> Unit,
     onNavigateToQuran: () -> Unit,
+    onNavigateToReminders: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val calendarType by preferencesManager.calendarType.collectAsState(initial = CalendarType.HIJRI)
@@ -227,6 +229,13 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_quran_subtitle),
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
                     onClick = onNavigateToQuran
+                )
+                HorizontalDivider(color = AppTheme.colors.border, thickness = 1.dp)
+                SettingsMenuItem(
+                    title = stringResource(R.string.settings_reminders_title),
+                    subtitle = stringResource(R.string.settings_reminders_subtitle),
+                    icon = Icons.Rounded.Notifications,
+                    onClick = onNavigateToReminders
                 )
             }
         }
