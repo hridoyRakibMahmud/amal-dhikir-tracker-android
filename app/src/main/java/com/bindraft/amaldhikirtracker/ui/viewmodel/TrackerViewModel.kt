@@ -14,10 +14,13 @@ import com.bindraft.amaldhikirtracker.util.LocationTracker
 import com.bindraft.amaldhikirtracker.util.SpiritualDayProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+
+private const val AL_KAHF_NAME = "Surah Al-Kahf"
 
 class TrackerViewModel(
     private val repository: AmalRepository,
@@ -75,11 +78,14 @@ class TrackerViewModel(
         _viewedDate.value = spiritualDate.value
     }
 
+    val isViewedDateFriday: StateFlow<Boolean> = viewedDate.map { it.dayOfWeek == DayOfWeek.FRIDAY }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val viewedSalatLogs: StateFlow<List<SalatLog>> = viewedDate
         .flatMapLatest { date -> repository.getSalatLogsByDate(date) }
         .map { logs ->
-            // Display order: Fard rows chronological (Fajr → Isha), then Nafl rows.
-            val order = listOf("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha", "Tahajjud", "Duha")
+            // Display order: Fard rows chronological (Fajr → Isha, Jumu'ah taking Dhuhr's slot on Friday), then Nafl rows.
+            val order = listOf("Fajr", "Dhuhr", "Jumu'ah", "Asr", "Maghrib", "Isha", "Tahajjud", "Duha", AL_KAHF_NAME)
             logs.sortedBy { log ->
                 val index = order.indexOf(log.salatName)
                 if (index != -1) index else 99
@@ -94,12 +100,22 @@ class TrackerViewModel(
     val allDhikirs: StateFlow<List<Dhikir>> = repository.getAllDhikirs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** The default "Durud" dhikir, highlighted in its own section on Friday. Null if it's been deleted. */
+    val fridayDhikir: StateFlow<Dhikir?> = allDhikirs
+        .map { dhikirs -> dhikirs.find { it.name.equals("Durud", ignoreCase = true) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val fardSalatLogs: StateFlow<List<SalatLog>> = viewedSalatLogs
         .map { logs -> logs.filter { it.type == "FARD" } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val naflSalatLogs: StateFlow<List<SalatLog>> = viewedSalatLogs
-        .map { logs -> logs.filter { it.type == "VOLUNTARY" } }
+        .map { logs -> logs.filter { it.type == "VOLUNTARY" && it.salatName != AL_KAHF_NAME } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Friday-only "Surah Al-Kahf" row, shown in its own section instead of alongside Nafl. */
+    val fridaySalatLogs: StateFlow<List<SalatLog>> = viewedSalatLogs
+        .map { logs -> logs.filter { it.salatName == AL_KAHF_NAME } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Consecutive spiritual days (ending today) where all 5 Fard prayers were completed.
@@ -116,7 +132,11 @@ class TrackerViewModel(
         var day = endDate
         while (true) {
             val dayLogs = byDate[day] ?: break
-            val allDone = fardNames.all { name -> dayLogs.any { it.salatName == name && it.isCompleted } }
+            val allDone = fardNames.all { name ->
+                // Dhuhr's slot is logged as "Jumu'ah" on Friday.
+                val namesToCheck = if (name == "Dhuhr") listOf("Dhuhr", "Jumu'ah") else listOf(name)
+                namesToCheck.any { n -> dayLogs.any { it.salatName == n && it.isCompleted } }
+            }
             if (!allDone) break
             count++
             day = day.minusDays(1)
@@ -140,6 +160,7 @@ class TrackerViewModel(
 
     private fun ensureInitialSalats(targetDate: LocalDate) {
         viewModelScope.launch {
+            val isFriday = targetDate.dayOfWeek == DayOfWeek.FRIDAY
             val fardSalats = listOf("Maghrib", "Isha", "Fajr", "Dhuhr", "Asr")
             val fardArabic = mapOf(
                 "Fajr" to "الفجر", "Dhuhr" to "الظهر", "Asr" to "العصر",
@@ -150,15 +171,21 @@ class TrackerViewModel(
             val voluntaryArabic = mapOf("Tahajjud" to "التهجد", "Duha" to "الضحى")
 
             fardSalats.forEach { name ->
-                val existing = repository.getSalatLogByName(name, targetDate)
+                // Dhuhr's slot is Jumu'ah on Friday. If an older "Dhuhr" row already exists for
+                // this Friday (seeded before this feature shipped), leave it rather than duplicate.
+                val onFridayDhuhrSlot = name == "Dhuhr" && isFriday
+                val seedName = if (onFridayDhuhrSlot) "Jumu'ah" else name
+                val seedArabic = if (onFridayDhuhrSlot) "الجمعة" else fardArabic[name]
+                val existing = repository.getSalatLogByName(seedName, targetDate)
+                    ?: if (onFridayDhuhrSlot) repository.getSalatLogByName("Dhuhr", targetDate) else null
                 if (existing == null) {
                     repository.insertSalatLog(
                         SalatLog(
-                            salatName = name,
+                            salatName = seedName,
                             type = "FARD",
                             isCompleted = false,
                             date = targetDate,
-                            arabicName = fardArabic[name]
+                            arabicName = seedArabic
                         )
                     )
                 }
@@ -175,6 +202,21 @@ class TrackerViewModel(
                             date = targetDate,
                             icon = voluntaryIcons[name],
                             arabicName = voluntaryArabic[name]
+                        )
+                    )
+                }
+            }
+
+            if (isFriday) {
+                val existing = repository.getSalatLogByName(AL_KAHF_NAME, targetDate)
+                if (existing == null) {
+                    repository.insertSalatLog(
+                        SalatLog(
+                            salatName = AL_KAHF_NAME,
+                            type = "VOLUNTARY",
+                            isCompleted = false,
+                            date = targetDate,
+                            arabicName = "سورة الكهف"
                         )
                     )
                 }

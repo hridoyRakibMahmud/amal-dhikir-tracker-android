@@ -45,6 +45,7 @@
     <string name="tracker_manage_action">Manage</string>
     <string name="tracker_nafl_placeholder">e.g. Witr</string>
     <string name="tracker_log_past_day">Log a previous day</string>
+    <string name="tracker_section_friday">FRIDAY SPECIAL</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

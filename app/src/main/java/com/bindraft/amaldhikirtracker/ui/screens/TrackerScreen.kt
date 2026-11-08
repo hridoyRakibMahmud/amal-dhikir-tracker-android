@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Check
@@ -45,6 +46,9 @@ fun TrackerScreen(
 ) {
     val fardSalats by viewModel.fardSalatLogs.collectAsState()
     val naflSalats by viewModel.naflSalatLogs.collectAsState()
+    val fridaySalats by viewModel.fridaySalatLogs.collectAsState()
+    val fridayDhikir by viewModel.fridayDhikir.collectAsState()
+    val isViewedDateFriday by viewModel.isViewedDateFriday.collectAsState()
     val allDhikirs by viewModel.allDhikirs.collectAsState()
     val todayDhikirLogs by viewModel.todayDhikirLogs.collectAsState()
     val dateHeader by viewModel.dateHeader.collectAsState()
@@ -118,10 +122,36 @@ fun TrackerScreen(
             }
         }
 
+        if (isViewedDateFriday) {
+            item {
+                SectionHeader(title = stringResource(R.string.tracker_section_friday))
+            }
+            item {
+                SectionCard {
+                    fridaySalats.forEachIndexed { index, salat ->
+                        if (index > 0) RowDivider()
+                        FridayRow(salat = salat, onToggle = { viewModel.toggleSalat(salat) })
+                    }
+                }
+            }
+            fridayDhikir?.let { dhikir ->
+                item {
+                    val count = todayDhikirLogs.find { it.dhikirId == dhikir.id }?.count ?: 0
+                    DhikirCard(
+                        dhikir = dhikir,
+                        todayCount = count,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 22.dp),
+                        onClick = { onNavigateToCounter(dhikir.id) }
+                    )
+                }
+            }
+        }
+
         item {
             SectionHeader(title = stringResource(R.string.tracker_section_dhikir), action = stringResource(R.string.tracker_manage_action), onAction = onNavigateToManageDhikirs)
         }
-        items(allDhikirs.chunked(2)) { pair ->
+        val gridDhikirs = if (isViewedDateFriday) allDhikirs.filterNot { it.id == fridayDhikir?.id } else allDhikirs
+        items(gridDhikirs.chunked(2)) { pair ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -439,6 +469,52 @@ private fun NaflRow(salat: SalatLog, onToggle: () -> Unit) {
         Spacer(modifier = Modifier.width(14.dp))
         Icon(
             imageVector = naflIconFor(salat.icon),
+            contentDescription = null,
+            tint = AppTheme.colors.gold,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = salat.salatName,
+            style = MaterialTheme.typography.titleMedium,
+            color = AppTheme.colors.text,
+            modifier = Modifier.weight(1f)
+        )
+        if (!salat.arabicName.isNullOrEmpty()) {
+            Text(
+                text = salat.arabicName,
+                fontFamily = NotoNaskhArabic,
+                style = MaterialTheme.typography.titleMedium,
+                color = AppTheme.colors.textMuted
+            )
+        }
+    }
+}
+
+@Composable
+private fun FridayRow(salat: SalatLog, onToggle: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(if (salat.isCompleted) AppTheme.colors.green else AppTheme.colors.surface)
+                .border(width = if (salat.isCompleted) 0.dp else 1.5.dp, color = AppTheme.colors.border, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            if (salat.isCompleted) {
+                Icon(Icons.Rounded.Check, contentDescription = stringResource(R.string.common_completed), tint = AppTheme.colors.onGreen, modifier = Modifier.size(16.dp))
+            }
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.MenuBook,
             contentDescription = null,
             tint = AppTheme.colors.gold,
             modifier = Modifier.size(20.dp)
