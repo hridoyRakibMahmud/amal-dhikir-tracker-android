@@ -122,8 +122,6 @@
     <string name="quran_edit_total_label">Total ayahs for this day</string>
 
     <!-- History -->
-    <string name="history_7_days">7 days</string>
-    <string name="history_30_days">30 days</string>
     <string name="history_salah_completion">Salah completion</string>
     <string name="history_total_dhikir">Total Dhikir</string>
     <string name="history_section_salah_chart">SALAH COMPLETED / DAY</string>
@@ -131,6 +129,8 @@
     <string name="history_section_activity_log">DETAILED ACTIVITY LOG</string>
     <string name="history_empty">No activity recorded yet.</string>
     <string name="history_salah_summary">Salah: %1$d/%2$d completed</string>
+    <string name="history_dhikir_all">All</string>
+    <string name="history_dhikir_filter_label">Dhikir</string>
 
     <!-- Login -->
     <string name="login_signed_in_as">Signed in as</string>

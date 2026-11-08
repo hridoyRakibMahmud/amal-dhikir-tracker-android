@@ -122,8 +122,6 @@
     <string name="quran_edit_total_label">এই দিনের মোট আয়াত</string>
 
     <!-- History -->
-    <string name="history_7_days">৭ দিন</string>
-    <string name="history_30_days">৩০ দিন</string>
     <string name="history_salah_completion">সালাত সম্পন্নতা</string>
     <string name="history_total_dhikir">মোট যিকর</string>
     <string name="history_section_salah_chart">দৈনিক সম্পন্ন সালাত</string>
@@ -131,6 +129,8 @@
     <string name="history_section_activity_log">বিস্তারিত কার্যক্রম লগ</string>
     <string name="history_empty">এখনো কোনো কার্যক্রম রেকর্ড করা হয়নি।</string>
     <string name="history_salah_summary">সালাত: %1$d/%2$d সম্পন্ন</string>
+    <string name="history_dhikir_all">সব</string>
+    <string name="history_dhikir_filter_label">যিকর</string>
 
     <!-- Login -->
     <string name="login_signed_in_as">সাইন ইন করা আছে</string>

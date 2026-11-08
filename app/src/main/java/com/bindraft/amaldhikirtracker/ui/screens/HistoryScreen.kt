@@ -1,25 +1,24 @@
 package com.bindraft.amaldhikirtracker.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bindraft.amaldhikirtracker.R
 import com.bindraft.amaldhikirtracker.data.local.entities.Dhikir
@@ -37,7 +36,10 @@ fun HistoryScreen(
     isTopLevel: Boolean = false
 ) {
     val state by viewModel.historyState.collectAsState()
-    val dateRange by viewModel.dateRange.collectAsState()
+    val weekNumber by viewModel.weekNumber.collectAsState()
+    val weekYear by viewModel.weekYear.collectAsState()
+    val allDhikirs by viewModel.allDhikirs.collectAsState()
+    val selectedDhikirId by viewModel.selectedDhikirId.collectAsState()
 
     LazyColumn(
         modifier = Modifier
@@ -68,9 +70,10 @@ fun HistoryScreen(
         }
 
         item {
-            DateRangeToggle(
-                selectedDays = dateRange,
-                onSelect = { viewModel.setDateRange(it) },
+            WeekNavigator(
+                weekLabel = stringResource(R.string.quran_week_label, weekNumber, weekYear),
+                onPrevious = viewModel::previousWeek,
+                onNext = viewModel::nextWeek,
                 modifier = Modifier.padding(bottom = 18.dp)
             )
         }
@@ -97,14 +100,20 @@ fun HistoryScreen(
         item {
             SectionLabel(stringResource(R.string.history_section_salah_chart))
             ChartCard {
-                SalatBarChart(state = state, daysCount = dateRange)
+                SalatBarChart(state = state)
             }
         }
 
         item {
             SectionLabel(stringResource(R.string.history_section_dhikir_chart))
+            DhikirDropdown(
+                dhikirs = allDhikirs,
+                selectedDhikirId = selectedDhikirId,
+                onSelect = viewModel::selectDhikir,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
             ChartCard {
-                DhikirBarChart(state = state, daysCount = dateRange)
+                DhikirBarChart(state = state, selectedDhikirId = selectedDhikirId)
             }
         }
 
@@ -139,33 +148,57 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun DateRangeToggle(selectedDays: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        color = AppTheme.colors.surface2,
-        shape = RoundedCornerShape(100.dp),
-        modifier = modifier.fillMaxWidth()
+private fun WeekNavigator(weekLabel: String, onPrevious: () -> Unit, onNext: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(modifier = Modifier.padding(4.dp)) {
-            listOf(7 to stringResource(R.string.history_7_days), 30 to stringResource(R.string.history_30_days)).forEach { (days, label) ->
-                val selected = selectedDays == days
-                Surface(
-                    onClick = { onSelect(days) },
-                    color = if (selected) AppTheme.colors.surface else Color.Transparent,
-                    shape = RoundedCornerShape(100.dp),
-                    shadowElevation = if (selected) 1.dp else 0.dp,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = label,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (selected) AppTheme.colors.text else AppTheme.colors.textMuted
-                    )
-                }
+        IconButton(onClick = onPrevious) {
+            Icon(Icons.Rounded.ChevronLeft, contentDescription = stringResource(R.string.quran_prev_week), tint = AppTheme.colors.text)
+        }
+        Text(
+            text = weekLabel,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = AppTheme.colors.text
+        )
+        IconButton(onClick = onNext) {
+            Icon(Icons.Rounded.ChevronRight, contentDescription = stringResource(R.string.quran_next_week), tint = AppTheme.colors.text)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DhikirDropdown(
+    dhikirs: List<Dhikir>,
+    selectedDhikirId: Long?,
+    onSelect: (Long?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedLabel = dhikirs.find { it.id == selectedDhikirId }?.name ?: stringResource(R.string.history_dhikir_all)
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
+        OutlinedTextField(
+            value = selectedLabel,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.history_dhikir_filter_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.history_dhikir_all)) },
+                onClick = { onSelect(null); expanded = false }
+            )
+            dhikirs.forEach { dhikir ->
+                DropdownMenuItem(
+                    text = { Text(dhikir.name) },
+                    onClick = { onSelect(dhikir.id); expanded = false }
+                )
             }
         }
     }
@@ -212,61 +245,88 @@ private fun ChartCard(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SalatBarChart(state: HistoryViewModel.HistoryState, daysCount: Int) {
-    val barColor = AppTheme.colors.green
-    val labelColor = AppTheme.colors.textMuted
-    val days = (0 until daysCount).map { state.endDate.minusDays(it.toLong()) }.reversed()
+private fun SalatBarChart(state: HistoryViewModel.HistoryState) {
+    val days = (0 until 7).map { state.startDate.plusDays(it.toLong()) }
     val data = days.map { date ->
         val logs = state.salatLogs[date] ?: emptyList()
-        if (logs.isEmpty()) 0f else logs.count { it.isCompleted }.toFloat() / logs.size.toFloat()
+        date to (if (logs.isEmpty()) 0 else logs.count { it.isCompleted })
     }
-    BarChart(data = data, days = days, daysCount = daysCount, barColor = barColor, labelColor = labelColor)
+    val labels = days.associateWith { date ->
+        val logs = state.salatLogs[date] ?: emptyList()
+        "${logs.count { it.isCompleted }}/${logs.size}"
+    }
+    WeeklyBarChart(data = data, barColor = AppTheme.colors.green, maxDate = state.endDate, labelOverride = labels)
 }
 
 @Composable
-private fun DhikirBarChart(state: HistoryViewModel.HistoryState, daysCount: Int) {
-    val barColor = AppTheme.colors.gold
-    val labelColor = AppTheme.colors.textMuted
-    val days = (0 until daysCount).map { state.endDate.minusDays(it.toLong()) }.reversed()
-    val counts = days.map { date -> state.dhikirLogs[date]?.sumOf { it.count }?.toFloat() ?: 0f }
-    val maxVal = (counts.maxOrNull() ?: 0f).coerceAtLeast(1f)
-    BarChart(data = counts.map { it / maxVal }, days = days, daysCount = daysCount, barColor = barColor, labelColor = labelColor)
-}
-
-@Composable
-private fun BarChart(data: List<Float>, days: List<LocalDate>, daysCount: Int, barColor: Color, labelColor: Color) {
-    Column {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-        ) {
-            val barWidth = size.width / (daysCount * 1.5f)
-            val spacing = (size.width - (barWidth * daysCount)) / (daysCount + 1)
-            val radius = 4.dp.toPx()
-
-            data.forEachIndexed { index, ratio ->
-                val barHeight = (size.height * ratio).coerceAtLeast(4f)
-                drawRoundRect(
-                    color = barColor,
-                    topLeft = Offset(spacing + index * (barWidth + spacing), size.height - barHeight),
-                    size = Size(barWidth, barHeight),
-                    cornerRadius = CornerRadius(radius, radius)
-                )
-            }
+private fun DhikirBarChart(state: HistoryViewModel.HistoryState, selectedDhikirId: Long?) {
+    val days = (0 until 7).map { state.startDate.plusDays(it.toLong()) }
+    val data = days.map { date ->
+        val logs = state.dhikirLogs[date] ?: emptyList()
+        val count = if (selectedDhikirId != null) {
+            logs.filter { it.dhikirId == selectedDhikirId }.sumOf { it.count }
+        } else {
+            logs.sumOf { it.count }
         }
-        if (daysCount <= 7) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                days.forEach { date ->
+        date to count
+    }
+    WeeklyBarChart(data = data, barColor = AppTheme.colors.gold, maxDate = state.endDate)
+}
+
+/** One bar per day with its value labeled above it, matching the Quran reading chart's design. */
+@Composable
+private fun WeeklyBarChart(
+    data: List<Pair<LocalDate, Int>>,
+    barColor: Color,
+    maxDate: LocalDate,
+    labelOverride: Map<LocalDate, String>? = null
+) {
+    val labelColor = AppTheme.colors.textMuted
+    val trackHeight = 120.dp
+    val maxVal = (data.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1).toFloat()
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(trackHeight + 22.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            data.forEach { (date, value) ->
+                val future = date.isAfter(maxDate)
+                val ratio = (value / maxVal).coerceIn(0f, 1f)
+                val barHeight = if (value > 0) (trackHeight * ratio).coerceAtLeast(6.dp) else 2.dp
+
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
                     Text(
-                        text = date.format(DateTimeFormatter.ofPattern("E")).take(1),
+                        text = labelOverride?.get(date) ?: value.toString(),
                         style = MaterialTheme.typography.labelSmall,
-                        color = labelColor
+                        color = if (future) labelColor.copy(alpha = 0.4f) else labelColor,
+                        modifier = Modifier.padding(bottom = barHeight + 4.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(barHeight)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(if (future) barColor.copy(alpha = 0.25f) else barColor)
                     )
                 }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            data.forEach { (date, _) ->
+                Text(
+                    text = date.format(DateTimeFormatter.ofPattern("E")).take(1),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
