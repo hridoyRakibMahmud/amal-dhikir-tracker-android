@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Nightlight
@@ -32,6 +33,9 @@ import com.bindraft.amaldhikirtracker.data.local.entities.SalatLog
 import com.bindraft.amaldhikirtracker.ui.theme.AppTheme
 import com.bindraft.amaldhikirtracker.ui.theme.NotoNaskhArabic
 import com.bindraft.amaldhikirtracker.ui.viewmodel.TrackerViewModel
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun TrackerScreen(
@@ -45,8 +49,12 @@ fun TrackerScreen(
     val todayDhikirLogs by viewModel.todayDhikirLogs.collectAsState()
     val dateHeader by viewModel.dateHeader.collectAsState()
     val streak by viewModel.streak.collectAsState()
+    val viewedDate by viewModel.viewedDate.collectAsState()
+    val spiritualDate by viewModel.spiritualDate.collectAsState()
+    val isViewingToday by viewModel.isViewingToday.collectAsState()
 
     var showAddNaflForm by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier
@@ -57,6 +65,15 @@ fun TrackerScreen(
     ) {
         item {
             HijriDateHeader(primary = dateHeader.first, secondary = dateHeader.second, streak = streak)
+        }
+
+        item {
+            DateSwitchBar(
+                viewedDate = viewedDate,
+                isViewingToday = isViewingToday,
+                onPickDate = { showDatePicker = true },
+                onJumpToday = viewModel::jumpToToday
+            )
         }
 
         item {
@@ -124,6 +141,15 @@ fun TrackerScreen(
 
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
+
+    if (showDatePicker) {
+        DateOnlyPickerDialog(
+            initialDate = viewedDate,
+            maxDate = spiritualDate,
+            onDismiss = { showDatePicker = false },
+            onPick = { picked -> viewModel.selectDate(picked); showDatePicker = false }
+        )
+    }
 }
 
 @Composable
@@ -177,6 +203,90 @@ private fun HijriDateHeader(primary: String, secondary: String, streak: Int) {
             color = AppTheme.colors.textMuted,
             modifier = Modifier.padding(start = 30.dp)
         )
+    }
+}
+
+@Composable
+private fun DateSwitchBar(
+    viewedDate: LocalDate,
+    isViewingToday: Boolean,
+    onPickDate: () -> Unit,
+    onJumpToday: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            onClick = onPickDate,
+            color = AppTheme.colors.surface2,
+            shape = RoundedCornerShape(100.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.CalendarMonth,
+                    contentDescription = stringResource(R.string.common_change_date),
+                    tint = AppTheme.colors.gold,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (isViewingToday) {
+                        stringResource(R.string.tracker_log_past_day)
+                    } else {
+                        viewedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM"))
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = AppTheme.colors.text
+                )
+            }
+        }
+        if (!isViewingToday) {
+            TextButton(onClick = onJumpToday) {
+                Text(
+                    text = stringResource(R.string.common_today),
+                    color = AppTheme.colors.gold,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateOnlyPickerDialog(
+    initialDate: LocalDate,
+    maxDate: LocalDate,
+    onDismiss: () -> Unit,
+    onPick: (LocalDate) -> Unit
+) {
+    val maxMillis = maxDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= maxMillis
+        }
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    onPick(LocalDate.ofEpochDay(millis / 86_400_000L))
+                } ?: onDismiss()
+            }) { Text(stringResource(R.string.common_ok)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        }
+    ) {
+        DatePicker(state = datePickerState, showModeToggle = false)
     }
 }
 

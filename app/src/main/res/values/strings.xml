@@ -44,6 +44,7 @@
     <string name="tracker_section_dhikir">DHIKIR</string>
     <string name="tracker_manage_action">Manage</string>
     <string name="tracker_nafl_placeholder">e.g. Witr</string>
+    <string name="tracker_log_past_day">Log a previous day</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

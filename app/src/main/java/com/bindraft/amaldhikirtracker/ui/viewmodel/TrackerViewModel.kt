@@ -55,7 +55,27 @@ class TrackerViewModel(
         if (type == CalendarType.HIJRI) hijri to "$gregorian · Gregorian" else gregorian to "$hijri · Hijri"
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "" to "")
 
-    val todaySalatLogs: StateFlow<List<SalatLog>> = spiritualDate
+    // Once the user picks a past day, stop following the spiritual-day rollover (same convention as Quran/Fasting).
+    private var userSelectedDate = false
+
+    private val _viewedDate = MutableStateFlow(spiritualDay.date.value)
+    val viewedDate: StateFlow<LocalDate> = _viewedDate.asStateFlow()
+
+    val isViewingToday: StateFlow<Boolean> = combine(viewedDate, spiritualDate) { viewed, today -> viewed == today }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun selectDate(date: LocalDate) {
+        if (date.isAfter(spiritualDate.value)) return
+        userSelectedDate = true
+        _viewedDate.value = date
+    }
+
+    fun jumpToToday() {
+        userSelectedDate = false
+        _viewedDate.value = spiritualDate.value
+    }
+
+    val viewedSalatLogs: StateFlow<List<SalatLog>> = viewedDate
         .flatMapLatest { date -> repository.getSalatLogsByDate(date) }
         .map { logs ->
             // Display order: Fard rows chronological (Fajr → Isha), then Nafl rows.
@@ -74,11 +94,11 @@ class TrackerViewModel(
     val allDhikirs: StateFlow<List<Dhikir>> = repository.getAllDhikirs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val fardSalatLogs: StateFlow<List<SalatLog>> = todaySalatLogs
+    val fardSalatLogs: StateFlow<List<SalatLog>> = viewedSalatLogs
         .map { logs -> logs.filter { it.type == "FARD" } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val naflSalatLogs: StateFlow<List<SalatLog>> = todaySalatLogs
+    val naflSalatLogs: StateFlow<List<SalatLog>> = viewedSalatLogs
         .map { logs -> logs.filter { it.type == "VOLUNTARY" } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -107,11 +127,18 @@ class TrackerViewModel(
     init {
         viewModelScope.launch {
             spiritualDay.ready.first { it }
-            spiritualDate.collect { ensureInitialSalats() }
+            spiritualDate.collect { today ->
+                if (!userSelectedDate) _viewedDate.value = today
+                ensureInitialSalats(today)
+            }
+        }
+        viewModelScope.launch {
+            spiritualDay.ready.first { it }
+            viewedDate.collect { date -> ensureInitialSalats(date) }
         }
     }
 
-    private fun ensureInitialSalats() {
+    private fun ensureInitialSalats(targetDate: LocalDate) {
         viewModelScope.launch {
             val fardSalats = listOf("Maghrib", "Isha", "Fajr", "Dhuhr", "Asr")
             val fardArabic = mapOf(
@@ -121,7 +148,6 @@ class TrackerViewModel(
             val voluntarySalats = listOf("Tahajjud", "Duha")
             val voluntaryIcons = mapOf("Tahajjud" to "bedtime", "Duha" to "wb_sunny")
             val voluntaryArabic = mapOf("Tahajjud" to "التهجد", "Duha" to "الضحى")
-            val targetDate = spiritualDate.value
 
             fardSalats.forEach { name ->
                 val existing = repository.getSalatLogByName(name, targetDate)
@@ -175,7 +201,7 @@ class TrackerViewModel(
                     salatName = name,
                     type = "VOLUNTARY",
                     isCompleted = false,
-                    date = spiritualDate.value,
+                    date = viewedDate.value,
                     icon = icon
                 )
             )
